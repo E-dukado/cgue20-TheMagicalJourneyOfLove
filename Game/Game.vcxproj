@@ -2,10 +2,12 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\Geometry.h" />
     <ClInclude Include="src\OBJLoader.h" />
     <ClInclude Include="src\INIReader.h" />
     <ClInclude Include="src\Light.h" />
+    <ClCompile Include="src\Geometry.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Shader.h" />
@@ -103,7 +105,7 @@
       <PreprocessorDefinitions>NO_BONUS;WIN32;_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)bullet\src;$(SolutionDir)external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

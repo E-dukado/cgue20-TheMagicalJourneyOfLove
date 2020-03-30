@@ -47,6 +47,7 @@ int main(int argc, char** argv)
 	int window_width = reader.GetInteger("window", "width", 800);
 	int window_height = reader.GetInteger("window", "height", 800);
 	int refresh_rate = reader.GetInteger("window", "refresh_rate", 60);
+	//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
 	bool fullscreen = reader.GetBoolean("window", "fullscreen", false);
 	std::string window_title = reader.Get("window", "title", "ECG");
 	float fov = float(reader.GetReal("camera", "fov", 60.0f));
@@ -68,7 +69,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Request core profile
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);  // Create an OpenGL debug context 
 	glfwWindowHint(GLFW_REFRESH_RATE, refresh_rate); // Set refresh rate
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 	// Enable antialiasing (4xMSAA)
 	glfwWindowHint(GLFW_SAMPLES, 4);
@@ -91,7 +92,11 @@ int main(int argc, char** argv)
 	// Initialize GLEW
 	glewExperimental = true;
 	GLenum err = glewInit();
+	glViewport(0, 0, window_width, window_height);
+	void framebuffer_size_callback(GLFWwindow * window, int width, int height);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+	
 	// If GLEW wasn't initialized
 	if (err != GLEW_OK) {
 		EXIT_WITH_ERROR("Failed to init GLEW: " << glewGetErrorString(err));
@@ -117,13 +122,15 @@ int main(int argc, char** argv)
 		EXIT_WITH_ERROR("Failed to init framework");
 	}
 
+	
+
 	// set callbacks
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
 	// set GL defaults
-	glClearColor(1, 1, 1, 1);
+	glClearColor(1, 0.5, 1, 1);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
@@ -131,6 +138,20 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	// Initialize scene and render loop
 	/* --------------------------------------------- */
+
+#pragma region geometry and shaders
+
+	float triangleVertices[] = {
+		-0.5f, -0.5f, 0,
+		 0.5f, -0.5f, 0,
+		 0.0f,  0.5f, 0
+	};
+
+
+
+#pragma endregion
+
+
 	{
 		
 		// Render loop
@@ -148,7 +169,8 @@ int main(int argc, char** argv)
 
 			// Update camera
 			glfwGetCursorPos(window, &mouse_x, &mouse_y);
-
+			
+			
 
 			// Compute frame time
 			dt = t;
@@ -160,6 +182,8 @@ int main(int argc, char** argv)
 			glfwSwapBuffers(window);
 		}
 	}
+
+
 
 
 	/* --------------------------------------------- */
@@ -224,11 +248,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 }
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	// make sure the viewport matches the new window dimensions; note that width and 
+	// height will be significantly larger than specified on retina displays.
+	glViewport(0, 0, width, height);
+}
+
+
+
+#pragma region debug
+
 static void APIENTRY DebugCallbackDefault(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam) {
 	if (id == 131185 || id == 131218) return; // ignore performance warnings from nvidia
 	std::string error = FormatDebugOutput(source, type, id, severity, message);
 	std::cout << error << std::endl;
 }
+
 
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg) {
 	std::stringstream stringStream;
@@ -336,3 +372,4 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 
 	return stringStream.str();
 }
+#pragma endregion
