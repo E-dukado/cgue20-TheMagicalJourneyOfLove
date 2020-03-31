@@ -14,6 +14,7 @@
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\glm.hpp>
 
+
 #define EXIT_WITH_ERROR(err) \
 	glfwTerminate(); \
 	std::cout << "ERROR: " << err << std::endl; \

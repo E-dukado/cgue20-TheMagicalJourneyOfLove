@@ -2,7 +2,6 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\Geometry.h" />
     <ClInclude Include="src\OBJLoader.h" />
     <ClInclude Include="src\INIReader.h" />

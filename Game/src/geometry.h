@@ -74,8 +74,8 @@ public:
 	 * @param data: data for the geometry object
 	 * @param material: material of the geometry object
 	 */
-	Geometry(glm::mat4 modelMatrix, GeometryData& data, std::shared_ptr<Material> material, DDSImage& image); /*Hier image*/
-	~Geometry();
+	//Geometry(glm::mat4 modelMatrix, GeometryData& data, std::shared_ptr<Material> material, DDSImage& image); /*Hier image*/
+	//~Geometry();
 
 	/*!
 	 * Draws the object
