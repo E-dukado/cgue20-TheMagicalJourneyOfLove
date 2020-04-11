@@ -5,9 +5,14 @@
 */
 
 
-#include "Utils.h"
+#pragma once
+
 #include <sstream>
 #include <string>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "Utils.h"
+#include "Shader.h"
 
 
 
@@ -124,8 +129,6 @@ int main(int argc, char** argv)
 		EXIT_WITH_ERROR("Failed to init framework");
 	}
 
-
-
 	// set callbacks
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -135,31 +138,21 @@ int main(int argc, char** argv)
 	glClearColor(1, 0.5, 1, 1);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-
-
-	/* --------------------------------------------- */
-	// Initialize scene and render loop
-	/* --------------------------------------------- */
-
-
-
-
-
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
 #pragma region geometry and shaders
 
 
-
-
-
 	// Geometry
 
 	float triangleVertices[] = {
-		-0.5f,  0.5f,  0.0f, //0 left upper
-		 0.5f,  0.5f,  0.0f, //1 right upper
-		 0.5f, -0.5f,  0.0f, //2 right lower
-		-0.5f, -0.5f,  0.0f	 //3 left lower
+		//position				//colors
+		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	//0 left upper
+		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	//1 right upper
+		 0.5f, -0.5f,  0.0f,	1.0f, 1.0f, 0.0f,	//2 right lower
+		-0.5f, -0.5f,  0.0f,	0.0f, 0.0f, 1.0f	//3 left lower
 	};
 
 	unsigned int triangleIndices[] = {
@@ -182,8 +175,12 @@ int main(int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// position attributes (first three each row)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	// color attributes (last three each row)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	GLuint EBO;
 	glGenBuffers(1, &EBO);
@@ -191,81 +188,17 @@ int main(int argc, char** argv)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(triangleIndices), triangleIndices, GL_STATIC_DRAW);
 
 
-
-
-
-
-	//load shader source into buffers
-
-	//std::string vertexSource = filetobuf("assets/vertex.vert");         //something wrong with loader, haven't figured out what yet, feel free to implement a file loader
-
-	//const char* vertexPointer = vertexSource.c_str();
-
-
-
-	const char* vertexSource = "#version 450 core\n"
-		"layout (location = 0) in vec3 aPos;\n"
-		"void main()\n"
-		"{\n"
-		"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-		"}\0";
-
-	const char* fragmentSource = "#version 450\n"
-		"layout(location = 3) uniform vec3 color;\n"
-		"out vec4 fragColor;\n"
-
-		"void main() {\n"
-		"fragColor = vec4(color, 1.0f);\n"
-		"}\0";
-
-
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-
-
-
-	glShaderSource(vertexShader, 1, &vertexSource, NULL);
-	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-	glCompileShader(vertexShader);
-	glCompileShader(fragmentShader);
-
-	GLuint shaderProgram = glCreateProgram();
-
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	glUseProgram(shaderProgram);
-
-	glUniform3f(3, 1, 1, 1);
-
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-
-	/* --> to test if shaders program is linked correctly
-
-	int  success;
-	char infoLog[512];
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-
-	*/
-
+	//Load and initialize shaders
+	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
 
 
 #pragma endregion
 
-
-
+	/* --------------------------------------------- */
+	// Initialize scene and render loop
+	/* --------------------------------------------- */
 
 	{
-
 		// Render loop
 		float t = float(glfwGetTime());
 		float dt = 0.0f;
@@ -280,16 +213,26 @@ int main(int argc, char** argv)
 			glfwPollEvents();
 
 			// Update camera
-			glfwGetCursorPos(window, &mouse_x, &mouse_y);
+			//glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
-			glUseProgram(shaderProgram);
+			//activate Shader
+			shader.use();
+
+			//update Color
+			float timeValue = (float)glfwGetTime();
+			float colorValue = sin(timeValue) / 3.0f + 0.5f;
+			shader.setFloat("animationFactor", colorValue);
+
+			//render
 			glBindVertexArray(VAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
 			// Compute frame time
-			dt = t;
-			t = float(glfwGetTime());
-			dt = t - dt;
-			t_sum += dt;
+			//dt = t;
+			//t = float(glfwGetTime());
+			//dt = t - dt;
+			//t_sum += dt;
 
 			// Swap buffers
 			glfwSwapBuffers(window);
@@ -302,15 +245,14 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	// Destroy framework
 	/* --------------------------------------------- */
-
 	destroyFramework();
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+
 	/* --------------------------------------------- */
 	// Destroy context and exit
 	/* --------------------------------------------- */
-
 	glfwTerminate();
 
 	return EXIT_SUCCESS;

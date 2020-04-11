@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="src\Camera.h" />
+    <ClCompile Include="src\Shader.cpp" />
     <ClInclude Include="src\Geometry.h" />
     <ClInclude Include="src\OBJLoader.h" />
     <ClInclude Include="src\INIReader.h" />
@@ -128,7 +128,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_BONUS;WIN32;_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)bullet\src;$(SolutionDir)external\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Eduardo\Dropbox\Uni\TU\SS2020\CG\UE\Aufgabe\cgue20-TheMagicalJourneyOfLove\Game\src;$(SolutionDir)bullet\src;$(SolutionDir)external\include</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>
