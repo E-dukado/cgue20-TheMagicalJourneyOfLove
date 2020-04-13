@@ -3,10 +3,14 @@
   <ItemGroup>
     <ClCompile Include="src\EBO.cpp" />
     <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\stb_image.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\VAO.cpp" />
     <ClCompile Include="src\VBO.cpp" />
     <ClInclude Include="src\EBO.h" />
     <ClInclude Include="src\Geometry.h" />
+    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\OBJLoader.h" />
     <ClInclude Include="src\INIReader.h" />
     <ClInclude Include="src\Light.h" />

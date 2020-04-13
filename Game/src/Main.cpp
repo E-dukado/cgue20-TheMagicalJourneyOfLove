@@ -16,6 +16,7 @@
 #include "VAO.h"
 #include "VBO.h"
 #include "EBO.h"
+#include "Texture.h"
 
 
 
@@ -150,11 +151,11 @@ int main(int argc, char** argv)
 
 	// Geometry
 	float triangleVertices[] = {
-		//position				//colors
-		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	//0 left upper
-		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	//1 right upper
-		 0.5f, -0.5f,  0.0f,	1.0f, 1.0f, 0.0f,	//2 right lower
-		-0.5f, -0.5f,  0.0f,	0.0f, 0.0f, 1.0f	//3 left lower
+		//position				//colors			//texture uv_coords
+		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	0.0f, 1.0f,			//0 left upper
+		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	1.0f, 1.0f,			//1 right upper
+		 0.5f, -0.5f,  0.0f,	1.0f, 1.0f, 0.0f,	1.0f, 0.0f,			//2 right lower
+		-0.5f, -0.5f,  0.0f,	0.0f, 0.0f, 1.0f,	0.0f, 0.0f			//3 left lower
 	};
 
 	GLuint triangleIndices[] = {
@@ -170,6 +171,8 @@ int main(int argc, char** argv)
 	vao.addBuffer(vbo);
 
 	EBO ebo(triangleIndices, sizeof(triangleIndices));
+
+	Texture tex("assets/textures/pika.png");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -207,6 +210,7 @@ int main(int argc, char** argv)
 			shader.setFloat("animationFactor", colorValue);
 
 			//render
+			tex.bind();
 			vao.bind();
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
