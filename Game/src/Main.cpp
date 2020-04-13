@@ -13,6 +13,9 @@
 #include <GLFW/glfw3.h>
 #include "Utils.h"
 #include "Shader.h"
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
 
 
 
@@ -146,7 +149,6 @@ int main(int argc, char** argv)
 
 
 	// Geometry
-
 	float triangleVertices[] = {
 		//position				//colors
 		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	//0 left upper
@@ -155,38 +157,19 @@ int main(int argc, char** argv)
 		-0.5f, -0.5f,  0.0f,	0.0f, 0.0f, 1.0f	//3 left lower
 	};
 
-	unsigned int triangleIndices[] = {
+	GLuint triangleIndices[] = {
 		0, 3, 2,
 		2, 1, 0
 	};
 
 
+	VAO vao;
+	vao.bind();
 
-	//VAO
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-	glBindVertexArray(VAO);
+	VBO vbo(triangleVertices, sizeof(triangleVertices));
+	vao.addBuffer(vbo);
 
-
-	//load vertices into VBO
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
-
-	// position attributes (first three each row)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color attributes (last three each row)
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	GLuint EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(triangleIndices), triangleIndices, GL_STATIC_DRAW);
-
+	EBO ebo(triangleIndices, sizeof(triangleIndices));
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -224,7 +207,7 @@ int main(int argc, char** argv)
 			shader.setFloat("animationFactor", colorValue);
 
 			//render
-			glBindVertexArray(VAO);
+			vao.bind();
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
@@ -247,8 +230,8 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	destroyFramework();
 
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	//glDeleteVertexArrays(1, &VAO);
+	//glDeleteBuffers(1, &VBO);
 
 	/* --------------------------------------------- */
 	// Destroy context and exit
