@@ -18,6 +18,7 @@
 #include "VBO.h"
 #include "EBO.h"
 #include "Texture.h"
+#include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -56,16 +57,11 @@ float deltaTime = 0.0f, lastFrame = 0.0f;
 //mouse cursor
 bool firstMouse = true;
 float lastX = 0, lastY = 0;
-float camFOV = 60.0f;
-float camYaw = -90.0f, camPitch = 0.0f;
-
 
 //Camera
-vec3 cameraPos = vec3(0.0f, 0.0f, 3.0f);						//z-Axis goes in viewer's direction
-vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);						//unit vector in direction of Camera
-vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);							//unit vector in up direction perpendicular to camera
+Camera cam;
+mat4 viewMatrix = cam.getViewMatrix();
 
-mat4 viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 
 /* --------------------------------------------- */
@@ -238,7 +234,6 @@ int main(int argc, char** argv)
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
 	
 
-
 #pragma endregion
 
 	/* --------------------------------------------- */
@@ -262,19 +257,18 @@ int main(int argc, char** argv)
 			// Poll events
 			glfwPollEvents();
 
-			// Update camera
 
 			//activate Shader
 			shader.use();
 
 
-			//glm::mat4 viewMatrix = glm::mat4(1.0f);
-			glm::mat4 projectionMatrix = glm::mat4(1.0f);
+			// Update camera
+			mat4 projectionMatrix = mat4(1.0f);
 			processInput(window);
-			viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-			projectionMatrix = glm::perspective(glm::radians(camFOV), aspectRatio, zNear, zFar);
-			glUniformMatrix4fv(4, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-			glUniformMatrix4fv(5, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+			viewMatrix = cam.getViewMatrix();
+			projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
+			glUniformMatrix4fv(4, 1, GL_FALSE, value_ptr(viewMatrix));
+			glUniformMatrix4fv(5, 1, GL_FALSE, value_ptr(projectionMatrix));
 
 
 			//update Color
@@ -342,11 +336,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 {
-	camFOV -= (float) yOffset;
-	if (camFOV < 1.0f) camFOV = 1.0f;
-	if (camFOV > 60.0f) camFOV = 60.0f;
-
-	std::cout << camFOV << std::endl;
+	cam.processMouseScroll(yOffset);
 }
 
 void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
@@ -357,36 +347,21 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 		firstMouse = false;
 	}
 
-
 	float xOffset = xPos - lastX;
 	float yOffset = lastY - yPos;			//reversed bc y-coordinates go from bottom to top
 	lastX = xPos;
 	lastY = yPos;
 
-	const float sensitivity = 0.05f;
-	xOffset *= sensitivity;
-	yOffset *= sensitivity;
-
-	camYaw   += xOffset;
-	camPitch += yOffset;
-
-	if (camPitch > 89.0f)  camPitch = 89.0f;
-	if (camPitch < -89.0f) camPitch = -89.0f;
-
-	vec3 direction;
-	direction.x = cos(radians(camYaw)) * cos(radians(camPitch));
-	direction.y = sin(radians(camPitch));
-	direction.z = sin(radians(camYaw)) * cos(radians(camPitch));
-	cameraFront = normalize(direction);
+	cam.processMouseMovement(xOffset, yOffset);
 }
 
 
 void processInput(GLFWwindow* window) {
-	float cameraSpeed = 4.5f * deltaTime;
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)		cameraPos += cameraSpeed * cameraFront;
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)	cameraPos -= cameraSpeed * cameraFront;
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)	cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)	cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+	//float cameraSpeed = 4.5f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)		cam.processKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)	cam.processKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)	cam.processKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)	cam.processKeyboard(RIGHT, deltaTime);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)

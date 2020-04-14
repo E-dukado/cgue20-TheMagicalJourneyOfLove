@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\EBO.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\VAO.cpp" />
     <ClCompile Include="src\VBO.cpp" />
+    <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\EBO.h" />
     <ClInclude Include="src\Geometry.h" />
     <ClInclude Include="src\stb_image.h" />
