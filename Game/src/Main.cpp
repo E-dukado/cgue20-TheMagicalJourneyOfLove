@@ -9,6 +9,7 @@
 
 #include <sstream>
 #include <string>
+#include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Utils.h"
@@ -20,8 +21,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
-
+using namespace glm;
 
 /* --------------------------------------------- */
 // Prototypes
@@ -33,6 +35,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
+void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xPos, double yPos);
+
 
 
 /* --------------------------------------------- */
@@ -43,7 +48,24 @@ static bool _wireframe = false;
 static bool _culling = true;
 static bool _dragging = false;
 static bool _strafing = false;
-static float _zoom = 6.0f;
+
+
+//frame time
+float deltaTime = 0.0f, lastFrame = 0.0f;
+
+//mouse cursor
+bool firstMouse = true;
+float lastX = 0, lastY = 0;
+float camFOV = 60.0f;
+float camYaw = -90.0f, camPitch = 0.0f;
+
+
+//Camera
+vec3 cameraPos = vec3(0.0f, 0.0f, 3.0f);						//z-Axis goes in viewer's direction
+vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);						//unit vector in direction of Camera
+vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);							//unit vector in up direction perpendicular to camera
+
+mat4 viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 
 /* --------------------------------------------- */
@@ -64,7 +86,7 @@ int main(int argc, char** argv)
 	//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
 	bool fullscreen = reader.GetBoolean("window", "fullscreen", false);
 	std::string window_title = reader.Get("window", "title", "ECG");
-	float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
+	//float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
 	float zNear = float(reader.GetReal("camera", "zNear", 0.1f));
 	float zFar = float(reader.GetReal("camera", "zFar", 100.0f));
 	float aspectRatio = window_width / window_height;
@@ -139,10 +161,12 @@ int main(int argc, char** argv)
 
 	// set callbacks
 	glfwSetKeyCallback(window, key_callback);
-	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	//glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
 	// set GL defaults
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
 	glClearColor(1, 0.5, 1, 1);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -152,10 +176,11 @@ int main(int argc, char** argv)
 
 #pragma region geometry and shaders
 
+	
 
-	//currently textures are not on the top and bottom
-
+	
 	// Geometry
+	//currently textures are not on the top and bottom
 	float cubeVertices[] = {
 		//position				//colors			//texture uv_coords
 		-0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,	0.0f, 0.0f,			
@@ -184,6 +209,18 @@ int main(int argc, char** argv)
 		3,6,5 //left  
 	};
 
+	vec3 cubePositions[] = {
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(5.0f, 7.0f, 1.0f),
+		glm::vec3(-3.0f, 3.4f, -5.0f),
+		glm::vec3(12.0f, 1.5f, 4.0f),
+		glm::vec3(-5.5f, 5.0f, -4.0f),
+		glm::vec3(4.0f, -1.3f, -3.0f),
+		glm::vec3(-2.2f, 2.0f, -1.6f),
+		glm::vec3(6.0f, -5.6f, 2.0f),
+		glm::vec3(3.4f, -2.3f, 2.0f),
+		glm::vec3(-4.0f, -1.1f, -3.3f)
+	};
 	
 
 
@@ -210,58 +247,57 @@ int main(int argc, char** argv)
 
 	{
 		// Render loop
-		float t = float(glfwGetTime());
-		float dt = 0.0f;
 		float t_sum = 0.0f;
 		double mouse_x, mouse_y;
 
 		while (!glfwWindowShouldClose(window)) {
+			//Frame time calculation
+			float currentFrame = (float)glfwGetTime();
+			deltaTime = currentFrame - lastFrame;
+			lastFrame = currentFrame;
+			
 			// Clear backbuffer
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			// Poll events
 			glfwPollEvents();
 
-
-
-
 			// Update camera
-			//glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
 			//activate Shader
 			shader.use();
 
-			glm::mat4 viewMatrix = glm::mat4(1.0f);
+
+			//glm::mat4 viewMatrix = glm::mat4(1.0f);
 			glm::mat4 projectionMatrix = glm::mat4(1.0f);
-			viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-			projectionMatrix = glm::perspective(glm::radians(fovy), aspectRatio, zNear, zFar);
+			processInput(window);
+			viewMatrix = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+			projectionMatrix = glm::perspective(glm::radians(camFOV), aspectRatio, zNear, zFar);
 			glUniformMatrix4fv(4, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 			glUniformMatrix4fv(5, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
 
 			//update Color
-			float timeValue = (float)glfwGetTime();
-			float colorValue = sin(timeValue) / 3.0f + 0.5f;
+			float colorValue = sin(currentFrame) / 3.0f + 0.5f;
 			shader.setFloat("animationFactor", colorValue);
 
 
-			//model matrix changing over time, that's why it's declared in the game loop currently
-			glm::mat4 squareModel = glm::mat4(1.0f);
-			squareModel = glm::rotate(squareModel, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-			squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
-			glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(squareModel));
-
-			//render
 			tex.bind();
 			vao.bind();
-			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
+			//model matrix changing over time, that's why it's declared in the game loop currently
+			for (unsigned int i = 0; i < 10; i++)
+			{
+				glm::mat4 squareModel = glm::mat4(1.0f);
+				squareModel = glm::translate(squareModel, cubePositions[i]);
+				squareModel = glm::rotate(squareModel, currentFrame * glm::radians(30.0f * (i+1)), glm::vec3(0.5f, 1.0f, 0.0f));
+				squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
+				glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(squareModel));
 
-			// Compute frame time
-			//dt = t;
-			//t = float(glfwGetTime());
-			//dt = t - dt;
-			//t_sum += dt;
+				//render
+				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			}
+
 
 			// Swap buffers
 			glfwSwapBuffers(window);
@@ -276,8 +312,6 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	destroyFramework();
 
-	//glDeleteVertexArrays(1, &VAO);
-	//glDeleteBuffers(1, &VBO);
 
 	/* --------------------------------------------- */
 	// Destroy context and exit
@@ -306,9 +340,53 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	}
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 {
-	_zoom -= float(yoffset) * 0.5f;
+	camFOV -= (float) yOffset;
+	if (camFOV < 1.0f) camFOV = 1.0f;
+	if (camFOV > 60.0f) camFOV = 60.0f;
+
+	std::cout << camFOV << std::endl;
+}
+
+void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
+	if (firstMouse)				//check if it's the first cursor input to prevent perspective jump
+	{
+		lastX = xPos;
+		lastY = yPos;
+		firstMouse = false;
+	}
+
+
+	float xOffset = xPos - lastX;
+	float yOffset = lastY - yPos;			//reversed bc y-coordinates go from bottom to top
+	lastX = xPos;
+	lastY = yPos;
+
+	const float sensitivity = 0.05f;
+	xOffset *= sensitivity;
+	yOffset *= sensitivity;
+
+	camYaw   += xOffset;
+	camPitch += yOffset;
+
+	if (camPitch > 89.0f)  camPitch = 89.0f;
+	if (camPitch < -89.0f) camPitch = -89.0f;
+
+	vec3 direction;
+	direction.x = cos(radians(camYaw)) * cos(radians(camPitch));
+	direction.y = sin(radians(camPitch));
+	direction.z = sin(radians(camYaw)) * cos(radians(camPitch));
+	cameraFront = normalize(direction);
+}
+
+
+void processInput(GLFWwindow* window) {
+	float cameraSpeed = 4.5f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)		cameraPos += cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)	cameraPos -= cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)	cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)	cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
