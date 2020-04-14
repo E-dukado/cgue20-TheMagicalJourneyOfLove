@@ -18,7 +18,6 @@
     <ClCompile Include="src\Main.cpp" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Shader.h" />
-    <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\VAO.h" />
     <ClInclude Include="src\VBO.h" />

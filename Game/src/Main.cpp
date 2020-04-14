@@ -17,6 +17,9 @@
 #include "VBO.h"
 #include "EBO.h"
 #include "Texture.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 
@@ -61,9 +64,10 @@ int main(int argc, char** argv)
 	//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
 	bool fullscreen = reader.GetBoolean("window", "fullscreen", false);
 	std::string window_title = reader.Get("window", "title", "ECG");
-	float fov = float(reader.GetReal("camera", "fov", 60.0f));
-	float nearZ = float(reader.GetReal("camera", "near", 0.1f));
-	float farZ = float(reader.GetReal("camera", "far", 100.0f));
+	float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
+	float zNear = float(reader.GetReal("camera", "zNear", 0.1f));
+	float zFar = float(reader.GetReal("camera", "zFar", 100.0f));
+	float aspectRatio = window_width / window_height;
 
 	/* --------------------------------------------- */
 	// Create context
@@ -149,33 +153,53 @@ int main(int argc, char** argv)
 #pragma region geometry and shaders
 
 
+	//currently textures are not on the top and bottom
+
 	// Geometry
-	float triangleVertices[] = {
+	float cubeVertices[] = {
 		//position				//colors			//texture uv_coords
-		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	0.0f, 1.0f,			//0 left upper
-		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	1.0f, 1.0f,			//1 right upper
-		 0.5f, -0.5f,  0.0f,	1.0f, 1.0f, 0.0f,	1.0f, 0.0f,			//2 right lower
-		-0.5f, -0.5f,  0.0f,	0.0f, 0.0f, 1.0f,	0.0f, 0.0f			//3 left lower
+		-0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,	0.0f, 0.0f,			
+		 0.5f, -0.5f,  0.5f,	0.0f, 1.0f, 0.0f,	1.0f, 0.0f,			
+		 0.5f,  0.5f,  0.5f,	1.0f, 1.0f, 0.0f,	1.0f, 1.0f,			
+		-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,	0.0f, 1.0f,			
+		 0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,	0.0f, 0.0f,			
+		-0.5f, -0.5f, -0.5f,	0.0f, 1.0f, 0.0f,	1.0f, 0.0f,			
+		-0.5f,  0.5f, -0.5f,	1.0f, 1.0f, 0.0f,	1.0f, 1.0f,			
+		 0.5f,  0.5f, -0.5f,	1.0f, 1.0f, 0.0f,	0.0f, 1.0f			
+
 	};
 
-	GLuint triangleIndices[] = {
-		0, 3, 2,
-		2, 1, 0
+	GLuint cubeIndices[] = {
+		0,1,2, //front 
+		2,3,0, //front
+		5,4,1, //bottom
+		1,0,5, //bottom
+		4,5,6, //back
+		6,7,4, //back
+		3,2,6, //top
+		2,7,6, //top
+		1,4,7, //right
+		7,2,1, //right
+		5,0,3, //left
+		3,6,5 //left  
 	};
+
+	
 
 
 	VAO vao;
 	vao.bind();
 
-	VBO vbo(triangleVertices, sizeof(triangleVertices));
+	VBO vbo(cubeVertices, sizeof(cubeVertices));
 	vao.addBuffer(vbo);
 
-	EBO ebo(triangleIndices, sizeof(triangleIndices));
+	EBO ebo(cubeIndices, sizeof(cubeIndices));
 
 	Texture tex("assets/textures/pika.png");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
+	
 
 
 #pragma endregion
@@ -198,21 +222,39 @@ int main(int argc, char** argv)
 			// Poll events
 			glfwPollEvents();
 
+
+
+
 			// Update camera
 			//glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
 			//activate Shader
 			shader.use();
 
+			glm::mat4 viewMatrix = glm::mat4(1.0f);
+			glm::mat4 projectionMatrix = glm::mat4(1.0f);
+			viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+			projectionMatrix = glm::perspective(glm::radians(fovy), aspectRatio, zNear, zFar);
+			glUniformMatrix4fv(4, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+			glUniformMatrix4fv(5, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+
 			//update Color
 			float timeValue = (float)glfwGetTime();
 			float colorValue = sin(timeValue) / 3.0f + 0.5f;
 			shader.setFloat("animationFactor", colorValue);
 
+
+			//model matrix changing over time, that's why it's declared in the game loop currently
+			glm::mat4 squareModel = glm::mat4(1.0f);
+			squareModel = glm::rotate(squareModel, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
+			glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(squareModel));
+
 			//render
 			tex.bind();
 			vao.bind();
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 
 			// Compute frame time
