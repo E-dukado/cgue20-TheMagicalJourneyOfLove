@@ -163,7 +163,7 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(1, 0.5, 1, 1);
+	glClearColor(1, 1, 1, 1);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -178,17 +178,28 @@ int main(int argc, char** argv)
 	// Geometry
 	//currently textures are not on the top and bottom
 	float cubeVertices[] = {
-		//position				//colors			//texture uv_coords
-		-0.5f, -0.5f,  0.5f,	1.0f, 0.0f, 0.0f,	0.0f, 0.0f,			
-		 0.5f, -0.5f,  0.5f,	0.0f, 1.0f, 0.0f,	1.0f, 0.0f,			
-		 0.5f,  0.5f,  0.5f,	1.0f, 1.0f, 0.0f,	1.0f, 1.0f,			
-		-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 1.0f,	0.0f, 1.0f,			
-		 0.5f, -0.5f, -0.5f,	1.0f, 0.0f, 0.0f,	0.0f, 0.0f,			
-		-0.5f, -0.5f, -0.5f,	0.0f, 1.0f, 0.0f,	1.0f, 0.0f,			
-		-0.5f,  0.5f, -0.5f,	1.0f, 1.0f, 0.0f,	1.0f, 1.0f,			
-		 0.5f,  0.5f, -0.5f,	1.0f, 1.0f, 0.0f,	0.0f, 1.0f			
+		//position					//texture uv_coords
+		-0.5f, -0.5f,  0.5f,		0.0f, 0.0f,			
+		 0.5f, -0.5f,  0.5f,		1.0f, 0.0f,			
+		 0.5f,  0.5f,  0.5f,		1.0f, 1.0f,			
+		-0.5f,  0.5f,  0.5f,		0.0f, 1.0f,			
+		 0.5f, -0.5f, -0.5f,		0.0f, 0.0f,			
+		-0.5f, -0.5f, -0.5f,		1.0f, 0.0f,			
+		-0.5f,  0.5f, -0.5f,		1.0f, 1.0f,			
+		 0.5f,  0.5f, -0.5f,		0.0f, 1.0f			
 
 	};
+
+	/*colors		
+	1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+		*/
 
 	GLuint cubeIndices[] = {
 		0,1,2, //front 
@@ -219,19 +230,40 @@ int main(int argc, char** argv)
 	};
 	
 
+	
 
+	
+	
 	VAO vao;
 	vao.bind();
+
 
 	VBO vbo(cubeVertices, sizeof(cubeVertices));
 	vao.addBuffer(vbo);
 
 	EBO ebo(cubeIndices, sizeof(cubeIndices));
 
+	
+
+	//------------ lighting -------------------
+
+	/*
+	VAO lightVAO;
+	lightVAO.bind();
+	lightVAO.addBuffer(vbo);
+	EBO lightEBO(cubeIndices, sizeof(cubeIndices));
+	*/
+
+	//------------ /lighting -------------------
+
+
+
 	Texture tex("assets/textures/pika.png");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
+
+
 	
 
 #pragma endregion
@@ -267,14 +299,15 @@ int main(int argc, char** argv)
 			processInput(window);
 			viewMatrix = cam.getViewMatrix();
 			projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
-			glUniformMatrix4fv(4, 1, GL_FALSE, value_ptr(viewMatrix));
-			glUniformMatrix4fv(5, 1, GL_FALSE, value_ptr(projectionMatrix));
+			shader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 
+			
 
 			//update Color
-			float colorValue = sin(currentFrame) / 3.0f + 0.5f;
-			shader.setFloat("animationFactor", colorValue);
-
+			glm::vec3 simpleColor = glm::vec3(1.0f, 0.5f, 1.0f);
+			shader.setVec3("aColor", 1, simpleColor);
+			glUniform3f(1, 1, 0.4, 1);
 
 			tex.bind();
 			vao.bind();
@@ -286,11 +319,12 @@ int main(int argc, char** argv)
 				squareModel = glm::translate(squareModel, cubePositions[i]);
 				squareModel = glm::rotate(squareModel, currentFrame * glm::radians(30.0f * (i+1)), glm::vec3(0.5f, 1.0f, 0.0f));
 				squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
-				glUniformMatrix4fv(3, 1, GL_FALSE, glm::value_ptr(squareModel));
+				shader.setMat4("modelMatrix", 1, GL_FALSE, squareModel);
 
 				//render
 				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 			}
+
 
 
 			// Swap buffers
@@ -317,6 +351,11 @@ int main(int argc, char** argv)
 
 
 
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
+{
+	cam.processMouseScroll(yOffset);
+}
+
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -334,10 +373,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	}
 }
 
-void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
-{
-	cam.processMouseScroll(yOffset);
-}
 
 void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 	if (firstMouse)				//check if it's the first cursor input to prevent perspective jump
@@ -358,10 +393,10 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 
 void processInput(GLFWwindow* window) {
 	//float cameraSpeed = 4.5f * deltaTime;
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)		cam.processKeyboard(FORWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)	cam.processKeyboard(BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)	cam.processKeyboard(LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)	cam.processKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)		cam.processKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)	cam.processKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)	cam.processKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)	cam.processKeyboard(RIGHT, deltaTime);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)

@@ -1,14 +1,13 @@
-#version 430
+#version 450
 
-uniform float animationFactor; //atm provides the periodical change of color
 uniform sampler2D ourTexture;
 
-in vec3 ourColor;
+layout (location = 1) uniform vec3 aColor;
 in vec2 textureCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = texture(ourTexture, textureCoord) * vec4(ourColor * animationFactor, 1.0f); //periodical color;
+	fragColor = texture(ourTexture, textureCoord) * vec4(aColor, 1.0f); 
 }
 
 
