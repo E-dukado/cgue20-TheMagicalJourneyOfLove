@@ -13,6 +13,7 @@ public:
 	void bind();
 	void unbind();
 	void addBuffer(VBO& vbo);
+	void addLamp(VBO& vbo);
 private:
 	GLuint vaoId;
 };

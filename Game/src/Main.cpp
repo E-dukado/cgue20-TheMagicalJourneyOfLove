@@ -163,7 +163,7 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(1, 1, 1, 1);
+	glClearColor(0, 0, 0, 1);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -190,16 +190,6 @@ int main(int argc, char** argv)
 
 	};
 
-	/*colors		
-	1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		*/
 
 	GLuint cubeIndices[] = {
 		0,1,2, //front 
@@ -228,6 +218,50 @@ int main(int argc, char** argv)
 		glm::vec3(3.4f, -2.3f, 2.0f),
 		glm::vec3(-4.0f, -1.1f, -3.3f)
 	};
+
+	float lampVertices[] = {
+	 -0.5f, -0.5f, -0.5f,
+	  0.5f, -0.5f, -0.5f,
+	  0.5f,  0.5f, -0.5f,
+	  0.5f,  0.5f, -0.5f,
+	 -0.5f,  0.5f, -0.5f,
+	 -0.5f, -0.5f, -0.5f,
+
+	 -0.5f, -0.5f,  0.5f,
+	  0.5f, -0.5f,  0.5f,
+	  0.5f,  0.5f,  0.5f,
+	  0.5f,  0.5f,  0.5f,
+	 -0.5f,  0.5f,  0.5f,
+	 -0.5f, -0.5f,  0.5f,
+
+	 -0.5f,  0.5f,  0.5f,
+	 -0.5f,  0.5f, -0.5f,
+	 -0.5f, -0.5f, -0.5f,
+	 -0.5f, -0.5f, -0.5f,
+	 -0.5f, -0.5f,  0.5f,
+	 -0.5f,  0.5f,  0.5f,
+
+	  0.5f,  0.5f,  0.5f,
+	  0.5f,  0.5f, -0.5f,
+	  0.5f, -0.5f, -0.5f,
+	  0.5f, -0.5f, -0.5f,
+	  0.5f, -0.5f,  0.5f,
+	  0.5f,  0.5f,  0.5f,
+
+	 -0.5f, -0.5f, -0.5f,
+	  0.5f, -0.5f, -0.5f,
+	  0.5f, -0.5f,  0.5f,
+	  0.5f, -0.5f,  0.5f,
+	 -0.5f, -0.5f,  0.5f,
+	 -0.5f, -0.5f, -0.5f,
+
+	 -0.5f,  0.5f, -0.5f,
+	  0.5f,  0.5f, -0.5f,
+	  0.5f,  0.5f,  0.5f,
+	  0.5f,  0.5f,  0.5f,
+	 -0.5f,  0.5f,  0.5f,
+	 -0.5f,  0.5f, -0.5f,
+	};
 	
 
 	
@@ -247,12 +281,13 @@ int main(int argc, char** argv)
 
 	//------------ lighting -------------------
 
-	/*
-	VAO lightVAO;
-	lightVAO.bind();
-	lightVAO.addBuffer(vbo);
-	EBO lightEBO(cubeIndices, sizeof(cubeIndices));
-	*/
+	
+	VAO lampVAO;
+	lampVAO.bind();
+	VBO lampVBO(lampVertices, sizeof(lampVertices));
+	lampVAO.addLamp(lampVBO);
+	EBO lampEBO(cubeIndices, sizeof(cubeIndices));
+	
 
 	//------------ /lighting -------------------
 
@@ -262,6 +297,7 @@ int main(int argc, char** argv)
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
+	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
 
 
 	
@@ -324,6 +360,18 @@ int main(int argc, char** argv)
 				//render
 				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 			}
+
+			lampShader.use();
+			glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			glm::mat4 lampModel = glm::mat4(1.0f);
+			lampModel = glm::translate(lampModel, lightPos);
+			lampModel = glm::scale(lampModel, glm::vec3(0.2f)); // a smaller cube
+			lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
+
+			lampVAO.bind();
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
 
@@ -388,7 +436,7 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 	lastY = yPos;
 
 	if (_dragging) {
-		cam.processMouseMovement(xOffset, yOffset);
+		cam.processMouseMovement(-xOffset, -yOffset);
 	}
 }
 
