@@ -25,7 +25,7 @@ const float defaultSensitivity	= 0.05f;
 const float defaultSpeed		= 2.5f;
 const float defaultFOV			= 60.0f;
 
-const vec3 defaultPosition		= vec3(0.0f, 0.0f, 3.0f);
+const vec3 defaultPosition		= vec3(0.0f, 0.0f, 7.0f);
 const vec3 defaultFront			= vec3(0.0f, 0.0f, -1.0f);
 const vec3 defaultUp			= vec3(0.0f, 1.0f, 0.0f);
 const vec3 defaultRight			= vec3(1.0f, 0.0f, 0.0f);

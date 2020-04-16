@@ -46,7 +46,7 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 /* --------------------------------------------- */
 
 static bool _wireframe = false;
-static bool _culling = true;
+static bool _culling = false;
 static bool _dragging = false;
 static bool _strafing = false;
 
@@ -86,6 +86,7 @@ int main(int argc, char** argv)
 	float zNear = float(reader.GetReal("camera", "zNear", 0.1f));
 	float zFar = float(reader.GetReal("camera", "zFar", 100.0f));
 	float aspectRatio = window_width / window_height;
+	glm::vec3 lightPos(0.6f, 0.5f, 1.0f);
 
 	/* --------------------------------------------- */
 	// Create context
@@ -163,9 +164,9 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(0, 0, 0, 1);
+	glClearColor(0.2, 0.2, 0.2, 1);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -178,33 +179,50 @@ int main(int argc, char** argv)
 	// Geometry
 	//currently textures are not on the top and bottom
 	float cubeVertices[] = {
-		//position					//texture uv_coords
-		-0.5f, -0.5f,  0.5f,		0.0f, 0.0f,			
-		 0.5f, -0.5f,  0.5f,		1.0f, 0.0f,			
-		 0.5f,  0.5f,  0.5f,		1.0f, 1.0f,			
-		-0.5f,  0.5f,  0.5f,		0.0f, 1.0f,			
-		 0.5f, -0.5f, -0.5f,		0.0f, 0.0f,			
-		-0.5f, -0.5f, -0.5f,		1.0f, 0.0f,			
-		-0.5f,  0.5f, -0.5f,		1.0f, 1.0f,			
-		 0.5f,  0.5f, -0.5f,		0.0f, 1.0f			
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
-
-	GLuint cubeIndices[] = {
-		0,1,2, //front 
-		2,3,0, //front
-		5,4,1, //bottom
-		1,0,5, //bottom
-		4,5,6, //back
-		6,7,4, //back
-		3,2,6, //top
-		2,7,6, //top
-		1,4,7, //right
-		7,2,1, //right
-		5,0,3, //left
-		3,6,5 //left  
-	};
 
 	vec3 cubePositions[] = {
 		glm::vec3(0.0f, 0.0f, 0.0f),
@@ -219,81 +237,30 @@ int main(int argc, char** argv)
 		glm::vec3(-4.0f, -1.1f, -3.3f)
 	};
 
-	float lampVertices[] = {
-	 -0.5f, -0.5f, -0.5f,
-	  0.5f, -0.5f, -0.5f,
-	  0.5f,  0.5f, -0.5f,
-	  0.5f,  0.5f, -0.5f,
-	 -0.5f,  0.5f, -0.5f,
-	 -0.5f, -0.5f, -0.5f,
-
-	 -0.5f, -0.5f,  0.5f,
-	  0.5f, -0.5f,  0.5f,
-	  0.5f,  0.5f,  0.5f,
-	  0.5f,  0.5f,  0.5f,
-	 -0.5f,  0.5f,  0.5f,
-	 -0.5f, -0.5f,  0.5f,
-
-	 -0.5f,  0.5f,  0.5f,
-	 -0.5f,  0.5f, -0.5f,
-	 -0.5f, -0.5f, -0.5f,
-	 -0.5f, -0.5f, -0.5f,
-	 -0.5f, -0.5f,  0.5f,
-	 -0.5f,  0.5f,  0.5f,
-
-	  0.5f,  0.5f,  0.5f,
-	  0.5f,  0.5f, -0.5f,
-	  0.5f, -0.5f, -0.5f,
-	  0.5f, -0.5f, -0.5f,
-	  0.5f, -0.5f,  0.5f,
-	  0.5f,  0.5f,  0.5f,
-
-	 -0.5f, -0.5f, -0.5f,
-	  0.5f, -0.5f, -0.5f,
-	  0.5f, -0.5f,  0.5f,
-	  0.5f, -0.5f,  0.5f,
-	 -0.5f, -0.5f,  0.5f,
-	 -0.5f, -0.5f, -0.5f,
-
-	 -0.5f,  0.5f, -0.5f,
-	  0.5f,  0.5f, -0.5f,
-	  0.5f,  0.5f,  0.5f,
-	  0.5f,  0.5f,  0.5f,
-	 -0.5f,  0.5f,  0.5f,
-	 -0.5f,  0.5f, -0.5f,
-	};
-	
-
-	
-
-	
+		
 	
 	VAO vao;
 	vao.bind();
-
-
 	VBO vbo(cubeVertices, sizeof(cubeVertices));
 	vao.addBuffer(vbo);
 
-	EBO ebo(cubeIndices, sizeof(cubeIndices));
 
 	
 
 	//------------ lighting -------------------
 
-	
+	//the lamp uses the same VBO as the cubes since it is also a cube
 	VAO lampVAO;
 	lampVAO.bind();
-	VBO lampVBO(lampVertices, sizeof(lampVertices));
+	VBO lampVBO(cubeVertices, sizeof(cubeVertices));
 	lampVAO.addLamp(lampVBO);
-	EBO lampEBO(cubeIndices, sizeof(cubeIndices));
 	
 
 	//------------ /lighting -------------------
 
 
 
-	Texture tex("assets/textures/pika.png");
+	Texture tex("assets/textures/testTex2.jpg");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -329,7 +296,6 @@ int main(int argc, char** argv)
 			//activate Shader
 			shader.use();
 
-
 			// Update camera
 			mat4 projectionMatrix = mat4(1.0f);
 			processInput(window);
@@ -341,9 +307,10 @@ int main(int argc, char** argv)
 			
 
 			//update Color
-			glm::vec3 simpleColor = glm::vec3(1.0f, 0.5f, 1.0f);
-			shader.setVec3("aColor", 1, simpleColor);
-			glUniform3f(1, 1, 0.4, 1);
+			shader.use();
+			shader.setVec3("objectColor", 1, glm::vec3(1.0f, 1.0f, 1.0f));
+			shader.setVec3("lightColor", 1, glm::vec3(1.0f, 1.0f, 1.0f));
+			shader.setVec3("lightPos", 1, lightPos);
 
 			tex.bind();
 			vao.bind();
@@ -353,16 +320,16 @@ int main(int argc, char** argv)
 			{
 				glm::mat4 squareModel = glm::mat4(1.0f);
 				squareModel = glm::translate(squareModel, cubePositions[i]);
-				squareModel = glm::rotate(squareModel, currentFrame * glm::radians(30.0f * (i+1)), glm::vec3(0.5f, 1.0f, 0.0f));
+				squareModel = glm::rotate(squareModel, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
 				squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
 				shader.setMat4("modelMatrix", 1, GL_FALSE, squareModel);
 
 				//render
-				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
+			//setting up and drawing the white lamp cube
 			lampShader.use();
-			glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
 			glm::mat4 lampModel = glm::mat4(1.0f);
