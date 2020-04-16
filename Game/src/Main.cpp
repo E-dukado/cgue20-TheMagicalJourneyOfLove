@@ -76,17 +76,22 @@ int main(int argc, char** argv)
 
 	INIReader reader("assets/settings.ini");
 
+	//window
 	int window_width = reader.GetInteger("window", "width", 800);
 	int window_height = reader.GetInteger("window", "height", 800);
 	int refresh_rate = reader.GetInteger("window", "refresh_rate", 60);
 	//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
 	bool fullscreen = reader.GetBoolean("window", "fullscreen", false);
 	std::string window_title = reader.Get("window", "title", "ECG");
+
+	//camera
 	//float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
 	float zNear = float(reader.GetReal("camera", "zNear", 0.1f));
 	float zFar = float(reader.GetReal("camera", "zFar", 100.0f));
 	float aspectRatio = window_width / window_height;
-	glm::vec3 lightPos(0.6f, 0.5f, 1.0f);
+
+	//lighting
+	glm::vec3 lightPos(1.0f, 0.6f, 1.0f);
 
 	/* --------------------------------------------- */
 	// Create context
@@ -164,7 +169,7 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(0.2, 0.2, 0.2, 1);
+	glClearColor(0, 0, 0, 1);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -225,7 +230,7 @@ int main(int argc, char** argv)
 
 
 	vec3 cubePositions[] = {
-		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, -0.5f, 0.0f),
 		glm::vec3(5.0f, 7.0f, 1.0f),
 		glm::vec3(-3.0f, 3.4f, -5.0f),
 		glm::vec3(12.0f, 1.5f, 4.0f),
@@ -252,15 +257,14 @@ int main(int argc, char** argv)
 	//the lamp uses the same VBO as the cubes since it is also a cube
 	VAO lampVAO;
 	lampVAO.bind();
-	VBO lampVBO(cubeVertices, sizeof(cubeVertices));
-	lampVAO.addLamp(lampVBO);
+	lampVAO.addLamp(vbo);
 	
 
 	//------------ /lighting -------------------
 
 
 
-	Texture tex("assets/textures/testTex3.jpg");
+	Texture tex("assets/textures/testTex4.jpg");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -293,8 +297,24 @@ int main(int argc, char** argv)
 			glfwPollEvents();
 
 
-			//activate Shader
 			shader.use();
+			shader.setVec3("light.position", 1, lightPos);
+			shader.setVec3("viewPos", 1, cam.camPosition);
+
+			//light properties, ambient is set rather low so different objects don't brighten each other up too much
+			shader.setVec3("light.ambient", 1, glm::vec3(0.2, 0.2f, 0.2f));
+			shader.setVec3("light.diffuse", 1, glm::vec3(0.6f, 0.6f, 0.6f)); 
+			shader.setVec3("light.specular", 1, glm::vec3(1.0f, 1.0f, 1.0f));
+
+			//material properties
+			//ambient and diffuse should be set to similar values as the material/texture color
+			//specular is the shiny part
+			//shininess changes the appearance of the specular light, e.g. 16 -> large reflection, 256 -> small reflection 
+			shader.setVec3("material.ambient", 1, glm::vec3(0.5f, 0.6f, 0.4f));
+			shader.setVec3("material.diffuse", 1, glm::vec3(0.5f, 0.6f, 0.4f));
+			shader.setVec3("material.specular", 1, glm::vec3(0.6f, 0.6f, 0.6f));
+			shader.setFloat("material.shininess", 32);
+
 
 			// Update camera
 			mat4 projectionMatrix = mat4(1.0f);
@@ -304,14 +324,6 @@ int main(int argc, char** argv)
 			shader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 
-			
-
-			//update Color
-			shader.use();
-			shader.setVec3("objectColor", 1, glm::vec3(1.0f, 1.0f, 1.0f));
-			shader.setVec3("lightColor", 1, glm::vec3(1.0f, 1.0f, 1.0f));
-			shader.setVec3("lightPos", 1, lightPos);
-			shader.setVec3("viewPos", 1, cam.camPosition);
 
 			tex.bind();
 			vao.bind();
@@ -321,7 +333,7 @@ int main(int argc, char** argv)
 			{
 				glm::mat4 squareModel = glm::mat4(1.0f);
 				squareModel = glm::translate(squareModel, cubePositions[i]);
-				squareModel = glm::rotate(squareModel, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+				squareModel = glm::rotate(squareModel, currentFrame * glm::radians(20.0f * (i+1)), glm::vec3(1.0f, 0.3f, 0.5f));
 				squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
 				shader.setMat4("modelMatrix", 1, GL_FALSE, squareModel);
 
@@ -356,7 +368,7 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	destroyFramework();
 
-
+	
 	/* --------------------------------------------- */
 	// Destroy context and exit
 	/* --------------------------------------------- */
@@ -411,7 +423,7 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 
 void processInput(GLFWwindow* window) {
 	//float cameraSpeed = 4.5f * deltaTime;
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)		cam.processKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)	cam.processKeyboard(FORWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)	cam.processKeyboard(BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)	cam.processKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)	cam.processKeyboard(RIGHT, deltaTime);
