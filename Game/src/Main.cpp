@@ -260,7 +260,7 @@ int main(int argc, char** argv)
 
 
 
-	Texture tex("assets/textures/testTex2.jpg");
+	Texture tex("assets/textures/testTex3.jpg");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -311,6 +311,7 @@ int main(int argc, char** argv)
 			shader.setVec3("objectColor", 1, glm::vec3(1.0f, 1.0f, 1.0f));
 			shader.setVec3("lightColor", 1, glm::vec3(1.0f, 1.0f, 1.0f));
 			shader.setVec3("lightPos", 1, lightPos);
+			shader.setVec3("viewPos", 1, cam.camPosition);
 
 			tex.bind();
 			vao.bind();
