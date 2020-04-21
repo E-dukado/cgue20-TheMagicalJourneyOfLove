@@ -169,7 +169,7 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(0, 0, 0, 1);
+	glClearColor(0.05, 0.05, 0.05, 1);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -264,10 +264,13 @@ int main(int argc, char** argv)
 
 
 
-	Texture tex("assets/textures/testTex4.jpg");
+	Texture tex("assets/textures/testTex5.jpg");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
+	shader.use();
+	shader.setInt("material.diffuse", 0);
+
 	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
 
 
@@ -310,8 +313,6 @@ int main(int argc, char** argv)
 			//ambient and diffuse should be set to similar values as the material/texture color
 			//specular is the shiny part
 			//shininess changes the appearance of the specular light, e.g. 16 -> large reflection, 256 -> small reflection 
-			shader.setVec3("material.ambient", 1, glm::vec3(0.5f, 0.6f, 0.4f));
-			shader.setVec3("material.diffuse", 1, glm::vec3(0.5f, 0.6f, 0.4f));
 			shader.setVec3("material.specular", 1, glm::vec3(0.6f, 0.6f, 0.6f));
 			shader.setFloat("material.shininess", 32);
 

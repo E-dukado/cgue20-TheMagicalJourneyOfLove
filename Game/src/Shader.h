@@ -27,6 +27,8 @@ public:
 	//uniform functions
 	void setFloat(const std::string& name, float value) const;
 
+	void setInt(const std::string& name, int value) const;
+
 	void setVec2(const std::string& name, GLsizei count, glm::vec2& value) const;
 
 	void setVec3(const std::string& name, GLsizei count, glm::vec3& value) const;
