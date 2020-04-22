@@ -90,9 +90,6 @@ int main(int argc, char** argv)
 	float zFar = float(reader.GetReal("camera", "zFar", 100.0f));
 	float aspectRatio = window_width / window_height;
 
-	//lighting
-	glm::vec3 lightPos(1.0f, 0.6f, 1.0f);
-
 	/* --------------------------------------------- */
 	// Create context
 	/* --------------------------------------------- */
@@ -242,6 +239,13 @@ int main(int argc, char** argv)
 		glm::vec3(-4.0f, -1.1f, -3.3f)
 	};
 
+	//lighting
+	vec3 lightPos[] = { 
+		vec3(1.0f, 0.6f, 1.0f),
+		vec3(-6.0f, -2.0f, -3.0f)
+	};
+
+
 		
 	
 	VAO vao;
@@ -270,6 +274,7 @@ int main(int argc, char** argv)
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
 	shader.use();
 	shader.setInt("material.diffuse", 0);
+	//shader.setInt("material.specular", 1);
 
 	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
 
@@ -301,20 +306,42 @@ int main(int argc, char** argv)
 
 
 			shader.use();
-			shader.setVec3("light.position", 1, lightPos);
 			shader.setVec3("viewPos", 1, cam.camPosition);
-
-			//light properties, ambient is set rather low so different objects don't brighten each other up too much
-			shader.setVec3("light.ambient", 1, glm::vec3(0.2, 0.2f, 0.2f));
-			shader.setVec3("light.diffuse", 1, glm::vec3(0.6f, 0.6f, 0.6f)); 
-			shader.setVec3("light.specular", 1, glm::vec3(1.0f, 1.0f, 1.0f));
-
+			
 			//material properties
 			//ambient and diffuse should be set to similar values as the material/texture color
 			//specular is the shiny part
 			//shininess changes the appearance of the specular light, e.g. 16 -> large reflection, 256 -> small reflection 
 			shader.setVec3("material.specular", 1, glm::vec3(0.6f, 0.6f, 0.6f));
 			shader.setFloat("material.shininess", 32);
+
+
+			//light properties, ambient is set rather low so different objects don't brighten each other up too much
+			//	directional light
+			shader.setVec3("dirLight.direction", 1, vec3(-0.2f, -1.0f, -0.3f));
+			shader.setVec3("dirLight.ambient", 1, glm::vec3(0.05, 0.05f, 0.05f));
+			shader.setVec3("dirLight.diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f)); 
+			shader.setVec3("dirLight.specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+
+			
+			//	point light
+			shader.setVec3("pointLights[0].position", 1, lightPos[0]);
+			shader.setVec3("pointLights[0].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
+			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
+			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setFloat("pointLights[0].constant", 0.6f);
+			shader.setFloat("pointLights[0].linear", 0.009);
+			shader.setFloat("pointLights[0].quadratic", 0.032);
+			//	point light2
+			shader.setVec3("pointLights[1].position", 1, lightPos[1]);
+			shader.setVec3("pointLights[1].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
+			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
+			shader.setVec3("pointLights[1].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setFloat("pointLights[1].constant", 0.4f);
+			shader.setFloat("pointLights[1].linear", 0.09);
+			shader.setFloat("pointLights[1].quadratic", 0.32);
+			
+			
 
 
 			// Update camera
@@ -346,13 +373,17 @@ int main(int argc, char** argv)
 			lampShader.use();
 			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-			glm::mat4 lampModel = glm::mat4(1.0f);
-			lampModel = glm::translate(lampModel, lightPos);
-			lampModel = glm::scale(lampModel, glm::vec3(0.2f)); // a smaller cube
-			lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
-
 			lampVAO.bind();
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			for (unsigned int i = 0; i < 2; i++)
+			{
+				mat4 lampModel = mat4(1.0f);
+				lampModel = translate(lampModel, lightPos[i]);
+				lampModel = glm::scale(lampModel, glm::vec3(0.2f)); // a smaller cube
+				lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			
 
 
 
