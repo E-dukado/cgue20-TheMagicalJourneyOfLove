@@ -23,6 +23,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 using namespace glm;
 
@@ -246,6 +249,8 @@ int main(int argc, char** argv)
 	};
 
 
+	Assimp::Importer importer;
+
 		
 	
 	VAO vao;
@@ -288,10 +293,6 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 
 	{
-		// Render loop
-		float t_sum = 0.0f;
-		double mouse_x, mouse_y;
-
 		while (!glfwWindowShouldClose(window)) {
 			//Frame time calculation
 			float currentFrame = (float)glfwGetTime();
@@ -330,16 +331,16 @@ int main(int argc, char** argv)
 			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
 			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 1.0f, 1.0f));
 			shader.setFloat("pointLights[0].constant", 0.6f);
-			shader.setFloat("pointLights[0].linear", 0.009);
-			shader.setFloat("pointLights[0].quadratic", 0.032);
+			shader.setFloat("pointLights[0].linear", 0.009f);
+			shader.setFloat("pointLights[0].quadratic", 0.032f);
 			//	point light2
 			shader.setVec3("pointLights[1].position", 1, lightPos[1]);
 			shader.setVec3("pointLights[1].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
 			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
 			shader.setVec3("pointLights[1].specular", 1, vec3(1.0f, 1.0f, 1.0f));
 			shader.setFloat("pointLights[1].constant", 0.4f);
-			shader.setFloat("pointLights[1].linear", 0.09);
-			shader.setFloat("pointLights[1].quadratic", 0.32);
+			shader.setFloat("pointLights[1].linear", 0.09f);
+			shader.setFloat("pointLights[1].quadratic", 0.32f);
 			
 			
 
