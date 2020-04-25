@@ -166,7 +166,7 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(0.05, 0.05, 0.05, 1);
+	glClearColor(1.05, 1.05, 1.05, 1);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -239,6 +239,16 @@ int main(int argc, char** argv)
 		glm::vec3(-4.0f, -1.1f, -3.3f)
 	};
 
+	float groundVertices[] = {
+		-500, -0.5, 500,
+		500, -0.5, 500,
+		500, -0.5, -500,
+
+		500, -0.5, -500,
+		-500, -0.5, -500,
+		-500, -0.5, 500,
+	};
+
 	//lighting
 	vec3 lightPos[] = { 
 		vec3(1.0f, 0.6f, 1.0f),
@@ -270,6 +280,16 @@ int main(int argc, char** argv)
 
 
 
+	//-----------ground---------
+	VAO groundVAO;
+	groundVAO.bind();
+	VBO groundVBO(groundVertices, sizeof(groundVertices));
+	groundVAO.addGround(groundVBO);
+
+	//----------/ground---------
+
+
+
 	Texture tex("assets/textures/testTex5.jpg");
 
 	//Load and initialize shaders
@@ -282,7 +302,7 @@ int main(int argc, char** argv)
 
 
 	//---------------------Models-------------------------------
-	Model treeModel("assets/models/tree/Tree_low.obj");
+	Model treeModel("assets/models/tree/tree low.obj");
 	Model houseModel("assets/models/house/house.obj");
 
 	
@@ -355,6 +375,25 @@ int main(int argc, char** argv)
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 
 
+
+			mat4 tree = glm::mat4(1.0f);
+			tree = translate(tree, vec3(0.0f, -0.75f, -3.0f));
+			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
+			treeModel.draw(shader);
+
+			groundVAO.bind();
+			mat4 ground = glm::mat4(1.0f);
+			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			mat4 house = glm::mat4(1.0f);
+			house = translate(house, vec3(-5.0f, -0.75f, -5.0f));
+			house = scale(house, vec3(0.1f, 0.1f, 0.1f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, house);
+			houseModel.draw(shader);
+
+
 			tex.bind();
 			vao.bind();
 
@@ -371,18 +410,7 @@ int main(int argc, char** argv)
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
-			mat4 tree = glm::mat4(1.0f);
-			tree = translate(tree, vec3(0.0f, -0.75f, -3.0f));
-			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
-			treeModel.draw(shader);
-
-			
-			mat4 house = glm::mat4(1.0f);
-			house = translate(house, vec3(-5.0f, -0.75f, -5.0f)); 
-			house = scale(house, vec3(0.1f, 0.1f, 0.1f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, house);
-			houseModel.draw(shader);
+	
 			
 
 

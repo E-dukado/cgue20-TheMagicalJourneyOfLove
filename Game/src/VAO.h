@@ -14,6 +14,8 @@ public:
 	void unbind();
 	void addBuffer(VBO& vbo);
 	void addLamp(VBO& vbo);
+	void addGround(VBO& vbo);
+
 private:
 	GLuint vaoId;
 };
