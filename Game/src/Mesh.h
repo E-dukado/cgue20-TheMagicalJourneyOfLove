@@ -21,6 +21,7 @@ struct MeshVertex {
 struct MeshTexture {
     GLuint id;
     string type;
+    string path;
 };
 
 
@@ -33,7 +34,7 @@ public:
 
     Mesh(vector<MeshVertex> vertices, vector<unsigned int> indices, vector<MeshTexture> textures);
 
-    void Draw(Shader shader);
+    void draw(Shader shader);
 
 
 private:

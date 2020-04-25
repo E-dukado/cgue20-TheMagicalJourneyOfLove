@@ -3,8 +3,6 @@
 * Institute of Computer Graphics and Algorithms.
 * This file is part of the ECG Lab Framework and must not be redistributed.
 */
-
-
 #pragma once
 
 #include <sstream>
@@ -19,6 +17,7 @@
 #include "EBO.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "Model.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -38,7 +37,6 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 
@@ -52,7 +50,6 @@ static bool _wireframe = false;
 static bool _culling = false;
 static bool _dragging = false;
 static bool _strafing = false;
-
 
 //frame time
 float deltaTime = 0.0f, lastFrame = 0.0f;
@@ -284,6 +281,10 @@ int main(int argc, char** argv)
 	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
 
 
+	//---------------------Models-------------------------------
+	Model treeModel("assets/models/tree/Tree_low.obj");
+	Model houseModel("assets/models/house/house.obj");
+
 	
 
 #pragma endregion
@@ -370,6 +371,21 @@ int main(int argc, char** argv)
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
+			mat4 tree = glm::mat4(1.0f);
+			tree = translate(tree, vec3(0.0f, -0.75f, -3.0f));
+			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
+			treeModel.draw(shader);
+
+			
+			mat4 house = glm::mat4(1.0f);
+			house = translate(house, vec3(-5.0f, -0.75f, -5.0f)); 
+			house = scale(house, vec3(0.1f, 0.1f, 0.1f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, house);
+			houseModel.draw(shader);
+			
+
+
 			//setting up and drawing the white lamp cube
 			lampShader.use();
 			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
@@ -384,6 +400,8 @@ int main(int argc, char** argv)
 				lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
+
+			
 			
 
 

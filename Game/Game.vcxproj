@@ -4,6 +4,7 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\EBO.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\Texture.cpp" />
@@ -12,6 +13,7 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\EBO.h" />
     <ClInclude Include="src\Geometry.h" />
+    <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\Texture.h" />

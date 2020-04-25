@@ -9,7 +9,7 @@ Mesh::Mesh(vector<MeshVertex> vertices, vector<unsigned int> indices, vector<Mes
     setupMesh();
 }
 
-void Mesh::Draw(Shader shader)
+void Mesh::draw(Shader shader)
 {
     GLuint diffuseNr = 1;
     GLuint specularNr = 1;
