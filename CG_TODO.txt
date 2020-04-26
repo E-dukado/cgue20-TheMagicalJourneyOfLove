@@ -1,0 +1,32 @@
+things to do
+
+Issues		
+		- solve issue with texture not loading from imported objects				Priority: 10
+
+Modeling												Priority: 1
+		- Wizard										
+		- Robot
+		- Ida
+		- Talking House
+		- Bunny Caterpillar
+		- Random Animals
+		- objects to be picked up/interacted with
+
+Bullet		- implementation of physics								Priority: 10
+
+		
+
+Scene 
+		- lights, sun										Priority: 7
+		- terrain generation									Priority: 10
+		- trees											Priority: 10
+		- placing of objects									Priority: 3
+		- passive movement of objects 								Priority: 4
+
+Interaction
+		- interaction between objects/characters (button, range)				Priority: 6				
+		- movement of character									Priority: 5
+		- jumping + gravity									Priority: 3
+		
+
+
