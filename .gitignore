@@ -367,4 +367,4 @@ MigrationBackup/
 
 
 # Exceptions (custom)
-!assets/models/*
+!assets/models/**/*.obj
