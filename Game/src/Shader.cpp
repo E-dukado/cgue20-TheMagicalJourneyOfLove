@@ -41,7 +41,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     char infoLog[512];
 
     // vertex Shader
-    vertex = glCreateShader(GL_VERTEX_SHADER);
+        vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
     // print compile errors if any

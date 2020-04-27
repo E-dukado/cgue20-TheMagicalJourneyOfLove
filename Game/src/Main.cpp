@@ -25,6 +25,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "Terrain.h"
 
 using namespace glm;
 
@@ -288,6 +289,14 @@ int main(int argc, char** argv)
 
 	//----------/ground---------
 
+	
+
+
+	//-----------Terrain-----------
+
+	 
+	//-----------/Terrain----------
+
 
 
 	Texture tex("assets/textures/testTex5.jpg");
@@ -300,10 +309,18 @@ int main(int argc, char** argv)
 
 	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
 
+	Shader terrainShader("assets/shader/terrainVertex.vert", "assets/shader/terrainFragment.frag");
+
+
 
 	//---------------------Models-------------------------------
 	Model treeModel("assets/models/tree/tree low.obj");
 	Model houseModel("assets/models/house/house.obj");
+
+	Terrain terrain;
+	terrain.generateTerrain();
+
+
 
 	
 
@@ -384,7 +401,7 @@ int main(int argc, char** argv)
 
 			groundVAO.bind();
 			mat4 ground = glm::mat4(1.0f);
-			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
+			shader.setMat4("modelMatrix", 1, GL_FALSE, ground);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			mat4 house = glm::mat4(1.0f);
@@ -429,6 +446,15 @@ int main(int argc, char** argv)
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
+
+			terrainShader.use();
+			mat4 terrainModel = mat4(1.0f);
+			terrainShader.setMat4("modelMatrix", 1, GL_FALSE, terrainModel);
+			terrainShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			terrainShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			terrainShader.setFloat("time", deltaTime);
+			terrain.drawTerrain();
+			
 			
 			
 
