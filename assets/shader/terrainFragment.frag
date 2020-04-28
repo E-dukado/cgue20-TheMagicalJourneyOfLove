@@ -1,7 +1,7 @@
 #version 450 core
 
-layout(binding=0) uniform sampler2D grass;
-layout(binding=1) uniform sampler2D mountain;
+layout(binding=10) uniform sampler2D grass;
+layout(binding=11) uniform sampler2D mountain;
 
 in float height;
 in vec3 Position;

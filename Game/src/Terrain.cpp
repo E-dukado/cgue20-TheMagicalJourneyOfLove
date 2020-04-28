@@ -45,7 +45,20 @@ void Terrain::generateTerrain() {
 	for (j = 0; j < TERRAIN_DEPTH; j++) {
 		for (i = 0; i < TERRAIN_WIDTH; i++) {
 			vertices[count] = glm::vec3((float(i) / (TERRAIN_WIDTH - 1)), 0, (float(j) / (TERRAIN_DEPTH - 1)));
-			texCoords[count] = glm::vec2(1,1 );
+			if (count % 4 == 0) {
+				texCoords[count] = glm::vec2(0, 0);
+			}
+			else if (count % 4 == 1) {
+				texCoords[count] = glm::vec2(1, 0);
+
+			}
+			else if (count % 4 == 2) {
+				texCoords[count] = glm::vec2(0, 1);
+			}
+			else if (count % 4 == 3) {
+				texCoords[count] = glm::vec2(1, 1);
+			}
+	
 			count++;
 		}
 	}

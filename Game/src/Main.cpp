@@ -311,10 +311,10 @@ int main(int argc, char** argv)
 	//-----------/Terrain----------
 
 
-
-	Texture tex("assets/textures/testTex5.jpg");
-	//use jpg for heightmap
 	HeightMap heightmap("assets/textures/terrain/heightMap1.jpg");
+
+	Texture tex("assets/textures/testTex2.jpg");
+	//use jpg for heightmap
 	Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/mountain.jpg");
 
 	//Load and initialize shaders
@@ -415,9 +415,9 @@ int main(int argc, char** argv)
 			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
 			treeModel.draw(shader);
 
-			groundVAO.bind();
-			mat4 ground = glm::mat4(1.0f);
-			shader.setMat4("modelMatrix", 1, GL_FALSE, ground);
+			//groundVAO.bind();
+			//mat4 ground = glm::mat4(1.0f);
+			//shader.setMat4("modelMatrix", 1, GL_FALSE, ground);
 			//glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			mat4 house = glm::mat4(1.0f);

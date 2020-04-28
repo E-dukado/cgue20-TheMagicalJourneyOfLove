@@ -66,8 +66,11 @@ void Texture::bind()
 
 void Texture::doubleBind()
 {
+	glActiveTexture(GL_TEXTURE10);
 	glBindTexture(GL_TEXTURE_2D, texIDs[0]);
+	glActiveTexture(GL_TEXTURE11);
 	glBindTexture(GL_TEXTURE_2D, texIDs[1]);
+
 }
 
 void Texture::unbind()

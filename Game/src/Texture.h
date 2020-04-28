@@ -11,6 +11,7 @@ public:
 	~Texture();
 	Texture(const char* texturePath1, const char* texturePath2);
 
+
 	void doubleBind();
 	void bind();
 	void unbind();
