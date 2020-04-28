@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 	const int TERRAIN_HALF_DEPTH = TERRAIN_DEPTH >> 1;
 
 	//heightmap height scale and half scale values
-	float heightMapScale = 50;
+	float heightMapScale = 100;
 	float heightMapHalfScale = heightMapScale / 2.0f;
 
 	/* --------------------------------------------- */
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(0.05, 0.05, 0.05, 1);
+	glClearColor(1.05, 1.05, 1.05, 1);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -314,7 +314,8 @@ int main(int argc, char** argv)
 
 	Texture tex("assets/textures/testTex5.jpg");
 	//use jpg for heightmap
-	HeightMap heightmap("assets/textures/heightMap1.jpg");
+	HeightMap heightmap("assets/textures/terrain/heightMap1.jpg");
+	Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/mountain.jpg");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -472,6 +473,7 @@ int main(int argc, char** argv)
 			terrainShader.setInt2("HALF_TERRAIN_SIZE", TERRAIN_WIDTH >> 1, TERRAIN_DEPTH >> 1);
 			terrainShader.setFloat("scale", heightMapScale);
 			terrainShader.setFloat("half_scale", heightMapHalfScale);
+			terrainTex.doubleBind();
 
 			terrain.drawTerrain();
 			

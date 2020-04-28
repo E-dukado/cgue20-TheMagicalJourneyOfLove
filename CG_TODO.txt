@@ -29,4 +29,5 @@ Interaction
 		- jumping + gravity									Priority: 3
 		
 
-
+Optimization	
+		- make use of buffer classes in terrain generation

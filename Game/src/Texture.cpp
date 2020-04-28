@@ -23,6 +23,37 @@ Texture::Texture(const char* texturePath)
 	stbi_image_free(data);
 }
 
+Texture::Texture(const char* texturePath1, const char* texturePath2)
+{
+	glGenTextures(2, texIDs);
+
+	// Load brick texture file
+	unsigned char* data1 = stbi_load(texturePath1, &width, &height, &nrChannels, 0);
+
+	// Copy brick texture to OpenGL
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texIDs[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(data1);
+
+
+	// Load moss texture file
+	unsigned char* data2 = stbi_load(texturePath2, &width, &height, &nrChannels, 0);
+
+	// Copy moss texture to OpenGL
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texIDs[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data2);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(data2);
+}
+
+
 Texture::~Texture()
 {
 	glDeleteTextures(GL_TEXTURE_2D, &textureId);
@@ -31,6 +62,12 @@ Texture::~Texture()
 void Texture::bind()
 {
 	glBindTexture(GL_TEXTURE_2D, textureId);
+}
+
+void Texture::doubleBind()
+{
+	glBindTexture(GL_TEXTURE_2D, texIDs[0]);
+	glBindTexture(GL_TEXTURE_2D, texIDs[1]);
 }
 
 void Texture::unbind()
