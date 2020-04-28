@@ -18,7 +18,7 @@ Bullet		- implementation of physics								Priority: 10
 
 Scene 
 		- lights, sun										Priority: 7
-		- terrain generation									Priority: 10
+		- texture of terrain									Priority: 6
 		- trees											Priority: 10
 		- placing of objects									Priority: 3
 		- passive movement of objects 								Priority: 4
