@@ -26,6 +26,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "Terrain.h"
+#include "HeightMap.h"
 
 using namespace glm;
 
@@ -65,6 +66,7 @@ mat4 viewMatrix = cam.getViewMatrix();
 
 
 
+
 /* --------------------------------------------- */
 // Main
 /* --------------------------------------------- */
@@ -87,9 +89,20 @@ int main(int argc, char** argv)
 
 	//camera
 	//float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
-	float zNear = float(reader.GetReal("camera", "zNear", 0.1f));
-	float zFar = float(reader.GetReal("camera", "zFar", 100.0f));
+	float zNear = float(reader.GetReal("camera", "near", 0.1f));
+	float zFar = float(reader.GetReal("camera", "far", 500.0f));
 	float aspectRatio = window_width / window_height;
+
+
+	//heightmap texture dimensions and half dimensions
+	const int TERRAIN_WIDTH = 512;
+	const int TERRAIN_DEPTH = 512;
+	const int TERRAIN_HALF_WIDTH = TERRAIN_WIDTH >> 1;
+	const int TERRAIN_HALF_DEPTH = TERRAIN_DEPTH >> 1;
+
+	//heightmap height scale and half scale values
+	float heightMapScale = 50;
+	float heightMapHalfScale = heightMapScale / 2.0f;
 
 	/* --------------------------------------------- */
 	// Create context
@@ -300,6 +313,8 @@ int main(int argc, char** argv)
 
 
 	Texture tex("assets/textures/testTex5.jpg");
+	//use jpg for heightmap
+	HeightMap heightmap("assets/textures/heightMap1.jpg");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -392,7 +407,7 @@ int main(int argc, char** argv)
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 
 
-
+			tex.bind();
 			mat4 tree = glm::mat4(1.0f);
 			tree = translate(tree, vec3(0.0f, -0.75f, -3.0f));
 			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
@@ -402,7 +417,7 @@ int main(int argc, char** argv)
 			groundVAO.bind();
 			mat4 ground = glm::mat4(1.0f);
 			shader.setMat4("modelMatrix", 1, GL_FALSE, ground);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+			//glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			mat4 house = glm::mat4(1.0f);
 			house = translate(house, vec3(-5.0f, -0.75f, -5.0f));
@@ -447,12 +462,17 @@ int main(int argc, char** argv)
 			}
 
 
+			heightmap.bind();
 			terrainShader.use();
 			mat4 terrainModel = mat4(1.0f);
 			terrainShader.setMat4("modelMatrix", 1, GL_FALSE, terrainModel);
 			terrainShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 			terrainShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-			terrainShader.setFloat("time", deltaTime);
+			terrainShader.setInt("heightMapTexture", 0);
+			terrainShader.setInt2("HALF_TERRAIN_SIZE", TERRAIN_WIDTH >> 1, TERRAIN_DEPTH >> 1);
+			terrainShader.setFloat("scale", heightMapScale);
+			terrainShader.setFloat("half_scale", heightMapHalfScale);
+
 			terrain.drawTerrain();
 			
 			

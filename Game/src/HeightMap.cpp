@@ -1,8 +1,8 @@
-#include "Texture.h"
+#include "Heightmap.h"
 
-Texture::Texture(const char* texturePath)
+HeightMap::HeightMap(const char* heightMapPath)
 {
-	glGenTextures(1, &textureId);
+	glGenTextures(1, &heightMapID);
 	bind();
 
 	//Wrapping and Filtering options
@@ -13,27 +13,28 @@ Texture::Texture(const char* texturePath)
 
 	//load and generate texture
 	stbi_set_flip_vertically_on_load(true); //because y=0 at images are on top of axis
-	unsigned char* data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load(heightMapPath, &width, &height, &nrChannels, 0);
 	if (data) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
-	} else {
+	}
+	else {
 		std::cout << "Loading texture failed!" << std::endl;
 	}
 	stbi_image_free(data);
 }
 
-Texture::~Texture()
+HeightMap::~HeightMap()
 {
-	glDeleteTextures(GL_TEXTURE_2D, &textureId);
+	glDeleteTextures(GL_TEXTURE_2D, &heightMapID);
 }
 
-void Texture::bind()
+void HeightMap::bind()
 {
-	glBindTexture(GL_TEXTURE_2D, textureId);
+	glBindTexture(GL_TEXTURE_2D, heightMapID);
 }
 
-void Texture::unbind()
+void HeightMap::unbind()
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }

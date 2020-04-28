@@ -4,16 +4,16 @@
 #include "GLFW/glfw3.h"
 #include "stb_image.h"
 
-class Texture
+class HeightMap
 {
 public:
-	Texture(const char* texturePath);
-	~Texture();
+	HeightMap(const char* heightMapPath);
+	~HeightMap();
 
 
 	void bind();
 	void unbind();
 private:
-	GLuint textureId;
+	GLuint heightMapID;
 	int width, height, nrChannels;
 };
