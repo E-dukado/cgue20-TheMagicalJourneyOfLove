@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 	glfwSetScrollCallback(window, scroll_callback);
 
 	// set GL defaults
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
 	glClearColor(0.7, 0.75, 1.0, 1);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
@@ -640,9 +640,11 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 	lastX = xPos;
 	lastY = yPos;
 
-	if (_dragging) {
+	/*if (_dragging) {
 		cam.processMouseMovement(-xOffset, -yOffset);
-	}
+	}*/
+
+	cam.processMouseMovement(xOffset, yOffset);
 }
 
 
