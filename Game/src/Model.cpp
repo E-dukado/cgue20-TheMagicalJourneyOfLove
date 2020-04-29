@@ -103,11 +103,11 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
 vector<MeshTexture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
 {
-    //cout << "1" << endl;
+   // cout << "1" << endl;
     vector<MeshTexture> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
-        //cout << "2" << endl;
+       // cout << "2" << endl;
         aiString str;
         mat->GetTexture(type, i, &str);
         bool skip = false;
@@ -128,7 +128,7 @@ vector<MeshTexture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType t
             texture.path = str.C_Str();
             textures.push_back(texture);
             texturesLoaded.push_back(texture); // add to loaded textures
-            //cout << texture.path << ", " << texture.type << endl;
+           // cout << texture.path << ", " << texture.type << endl;
         }
     }
 

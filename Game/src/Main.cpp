@@ -314,9 +314,12 @@ int main(int argc, char** argv)
 	HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
 
 	Texture tex("assets/textures/testTex2.jpg");
-	//use jpg for heightmap
+	//use jpg for heightma
+	Texture sunTex("assets/models/sunRed/sun.jpg");
+
 	Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
 	//Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/test_color.jpg");
+
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -334,6 +337,9 @@ int main(int argc, char** argv)
 	Model treeModel("assets/models/tree/tree low.obj");
 	Model houseModel("assets/models/house/house.obj");
 	Model wizardModel("assets/models/sorcerer/wizard.obj");
+	Model redSunModel("assets/models/sunRed/redSun.obj");
+	Model blueSunModel("assets/models/sunBlue/sunBlue.obj");
+
 
 	Terrain terrain;
 	terrain.generateTerrain();
@@ -435,6 +441,19 @@ int main(int argc, char** argv)
 			houseModel.draw(shader);
 
 
+			sunTex.bind();
+			mat4 redSun = glm::mat4(1.0f);
+			redSun = translate(redSun, vec3(-100.0f, 300.75f, -30.0f));
+			redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
+			redSunModel.draw(shader);
+
+			mat4 blueSun = glm::mat4(1.0f);
+			blueSun = translate(blueSun, vec3(300.0f, 400.75f, 200.0f));
+			blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, blueSun);
+			blueSunModel.draw(shader);
+			
 	
 
 			tex.bind();

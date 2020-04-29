@@ -15,6 +15,7 @@ Texture::Texture(const char* texturePath)
 	stbi_set_flip_vertically_on_load(true); //because y=0 at images are on top of axis
 	unsigned char* data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
 	if (data) {
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		//glGenerateMipmap(GL_TEXTURE_2D);
 	} else {
@@ -35,6 +36,7 @@ Texture::Texture(const char* texturePath1, const char* texturePath2)
 	glBindTexture(GL_TEXTURE_2D, texIDs[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
 	//glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data1);
@@ -48,6 +50,7 @@ Texture::Texture(const char* texturePath1, const char* texturePath2)
 	glBindTexture(GL_TEXTURE_2D, texIDs[1]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data2);
 	//glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data2);
