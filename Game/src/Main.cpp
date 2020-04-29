@@ -442,7 +442,26 @@ int main(int argc, char** argv)
 			{
 				glm::mat4 treeLoop = glm::mat4(1.0f);
 				treeLoop = glm::scale(treeLoop, glm::vec3(0.05f, 0.05f, 0.05f));
-				treeLoop = glm::translate(treeLoop, vec3(909.0f * sin(i), -15.0f, 400.0f * sin(i*4)));
+				treeLoop = glm::translate(treeLoop, vec3(909.0f * sin(i), -15.0f, 410.0f * sin(i*4.2)));
+				treeLoop = glm::rotate(treeLoop, glm::radians(20.0f * (i + 1)), glm::vec3(0, 1.0f, 0.0f));
+				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+				treeModel.draw(shader);
+			}
+
+			for (unsigned int i = 0; i < 30; i++)
+			{
+				glm::mat4 treeLoop = glm::mat4(1.0f);
+				treeLoop = glm::scale(treeLoop, glm::vec3(0.05f, 0.05f, 0.05f));
+				treeLoop = glm::translate(treeLoop, vec3(1209.0f * sin(i), -15.0f, 1200.0f * sin(i * 2.5)));
+				treeLoop = glm::rotate(treeLoop, glm::radians(20.0f * (i + 1)), glm::vec3(0, 1.0f, 0.0f));
+				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+				treeModel.draw(shader);
+			}
+			for (unsigned int i = 0; i < 30; i++)
+			{
+				glm::mat4 treeLoop = glm::mat4(1.0f);
+				treeLoop = glm::scale(treeLoop, glm::vec3(0.05f, 0.05f, 0.05f));
+				treeLoop = glm::translate(treeLoop, vec3(1509.0f * sin(i), -15.0f, 2000.0f * sin(i * 6)));
 				treeLoop = glm::rotate(treeLoop, glm::radians(20.0f * (i + 1)), glm::vec3(0, 1.0f, 0.0f));
 				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
 				treeModel.draw(shader);
@@ -452,7 +471,7 @@ int main(int argc, char** argv)
 
 			mat4 house = glm::mat4(1.0f);
 			house = translate(house, vec3(-5.0f, -0.75f, -5.0f));
-			house = scale(house, vec3(0.1f, 0.1f, 0.1f));	// it's too big for our scene, so scale it down
+			house = scale(house, vec3(0.2f, 0.22, 0.2f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, house);
 			houseModel.draw(shader);
 
