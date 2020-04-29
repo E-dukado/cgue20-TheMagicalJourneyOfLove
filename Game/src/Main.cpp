@@ -180,7 +180,7 @@ int main(int argc, char** argv)
 
 	// set GL defaults
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
-	glClearColor(1.05, 1.05, 1.05, 1);
+	glClearColor(0.7, 0.75, 1.0, 1);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -266,7 +266,7 @@ int main(int argc, char** argv)
 	//lighting
 	vec3 lightPos[] = { 
 		vec3(1.0f, 0.6f, 1.0f),
-		vec3(-6.0f, -2.0f, -3.0f)
+		vec3(-6.0f, 3.0f, -3.0f)
 	};
 
 
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
 	//-----------/Terrain----------
 
 
-	HeightMap heightmap("assets/textures/terrain/heightMap3.jpg");
+	HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
 
 	Texture tex("assets/textures/testTex2.jpg");
 	//use jpg for heightmap
@@ -333,7 +333,7 @@ int main(int argc, char** argv)
 	//---------------------Models-------------------------------
 	Model treeModel("assets/models/tree/tree low.obj");
 	Model houseModel("assets/models/house/house.obj");
-	Model bunnyModel("assets/models/bunny/bunny.obj");
+	Model wizardModel("assets/models/sorcerer/wizard.obj");
 
 	Terrain terrain;
 	terrain.generateTerrain();
@@ -410,6 +410,12 @@ int main(int argc, char** argv)
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 
 
+			mat4 wizard = glm::mat4(1.0f);
+			wizard = translate(wizard, vec3(5.0f, 0.3f, -3.0f));
+			wizard = scale(wizard, vec3(0.01f, 0.01f, 0.01f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, wizard);
+			wizardModel.draw(shader);
+
 			tex.bind();
 			mat4 tree = glm::mat4(1.0f);
 			tree = translate(tree, vec3(0.0f, -0.75f, -3.0f));
@@ -429,13 +435,7 @@ int main(int argc, char** argv)
 			houseModel.draw(shader);
 
 
-			mat4 bunny = glm::mat4(1.0f);
-			
-			bunny = translate(bunny, vec3(-1.0f, -0.5f, 0.0f));
-			bunny = scale(bunny, vec3(10.05f, 10.05f, 10.05f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, bunny);
-			bunnyModel.draw(shader);
-
+	
 
 			tex.bind();
 			vao.bind();
