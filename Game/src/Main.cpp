@@ -95,13 +95,13 @@ int main(int argc, char** argv)
 
 
 	//heightmap texture dimensions and half dimensions
-	const int TERRAIN_WIDTH = 512;
-	const int TERRAIN_DEPTH = 512;
+	const int TERRAIN_WIDTH = 1024;
+	const int TERRAIN_DEPTH = 1024;
 	const int TERRAIN_HALF_WIDTH = TERRAIN_WIDTH >> 1;
 	const int TERRAIN_HALF_DEPTH = TERRAIN_DEPTH >> 1;
 
 	//heightmap height scale and half scale values
-	float heightMapScale = 100;
+	float heightMapScale = 150;
 	float heightMapHalfScale = heightMapScale / 2.0f;
 
 	/* --------------------------------------------- */
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
 	//-----------/Terrain----------
 
 
-	HeightMap heightmap("assets/textures/terrain/heightMap1.jpg");
+	HeightMap heightmap("assets/textures/terrain/heightMap3.jpg");
 
 	Texture tex("assets/textures/testTex2.jpg");
 	//use jpg for heightmap
@@ -431,7 +431,7 @@ int main(int argc, char** argv)
 
 			mat4 bunny = glm::mat4(1.0f);
 			
-			bunny = translate(bunny, vec3(-1.0f, -0.25f, 0.0f));
+			bunny = translate(bunny, vec3(-1.0f, -0.5f, 0.0f));
 			bunny = scale(bunny, vec3(10.05f, 10.05f, 10.05f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, bunny);
 			bunnyModel.draw(shader);
@@ -476,6 +476,7 @@ int main(int argc, char** argv)
 			heightmap.bind();
 			terrainShader.use();
 			mat4 terrainModel = mat4(1.0f);
+			terrainModel = translate(terrainModel, glm::vec3(0, 65.0f, 0));
 			terrainShader.setMat4("modelMatrix", 1, GL_FALSE, terrainModel);
 			terrainShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 			terrainShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
