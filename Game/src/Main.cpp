@@ -424,8 +424,8 @@ int main(int argc, char** argv)
 
 
 			mat4 wizard = glm::mat4(1.0f);
-			wizard = translate(wizard, vec3(5.0f, 0.3f, -3.0f));
-			wizard = scale(wizard, vec3(0.01f, 0.01f, 0.01f));	// it's too big for our scene, so scale it down
+			wizard = translate(wizard, vec3(-7.0f, -0.2f, 3.0f));
+			wizard = scale(wizard, vec3(0.005f, 0.005f, 0.005f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, wizard);
 			wizardModel.draw(shader);
 

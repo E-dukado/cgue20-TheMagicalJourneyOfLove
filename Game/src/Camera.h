@@ -20,12 +20,12 @@ enum CameraMovement {
 
 //Default values
 const float defaultYaw			= -90.0f;
-const float defaultPitch		= 0.0f;
+const float defaultPitch		= 10.0f;
 const float defaultSensitivity	= 0.05f;
-const float defaultSpeed		= 100.0f;
+const float defaultSpeed		= 50.0f;
 const float defaultFOV			= 60.0f;
 
-const vec3 defaultPosition		= vec3(0.0f, 0.0f, 7.0f);
+const vec3 defaultPosition		= vec3(-7.0f, 1.0f, 15.0f);
 const vec3 defaultFront			= vec3(0.0f, 0.0f, -1.0f);
 const vec3 defaultUp			= vec3(0.0f, 1.0f, 0.0f);
 const vec3 defaultRight			= vec3(1.0f, 0.0f, 0.0f);
