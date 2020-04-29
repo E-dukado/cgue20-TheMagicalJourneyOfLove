@@ -9,14 +9,14 @@ struct Material {
 }; 
 uniform Material material;
 
-
+#define NR_DIR_LIGHTS 3
 struct DirLight {
 	vec3 direction;
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
 };
-uniform DirLight dirLight;  
+uniform DirLight dirLights[NR_DIR_LIGHTS];  
 
 
 #define NR_POINT_LIGHTS 2
@@ -56,9 +56,12 @@ void main() {
 	vec3 norm = normalize(normal);
 	vec3 viewDir = normalize(viewPos - fragPos);
 
+	vec3 result = vec3(0.0f);
 
 	//calculate lightings
-	vec3 result = calcDirLight(dirLight, norm, viewDir);
+	for(int i = 0; i < NR_DIR_LIGHTS; i++){
+		result += calcDirLight(dirLights[i], norm, viewDir);
+	}
 
 	for(int i = 0; i < NR_POINT_LIGHTS; i++){
 		result += calcPointLight(pointLights[i], norm, fragPos, viewDir);
