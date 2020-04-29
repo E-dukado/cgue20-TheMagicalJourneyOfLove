@@ -450,7 +450,7 @@ int main(int argc, char** argv)
 				shader.setMat4("modelMatrix", 1, GL_FALSE, squareModel);
 
 				//render
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+				//glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
 	
