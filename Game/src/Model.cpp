@@ -14,7 +14,7 @@ void Model::draw(Shader shader)
 void Model::loadModel(string path)
 {
     Assimp::Importer import;
-    const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate );
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -71,6 +71,8 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
         } else 
             vertex.textureCoords = glm::vec2(0.0f, 0.0f);
         
+        
+
         vertices.push_back(vertex);
     }
 
@@ -101,9 +103,11 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
 vector<MeshTexture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
 {
+    //cout << "1" << endl;
     vector<MeshTexture> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
+        //cout << "2" << endl;
         aiString str;
         mat->GetTexture(type, i, &str);
         bool skip = false;
@@ -124,8 +128,11 @@ vector<MeshTexture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType t
             texture.path = str.C_Str();
             textures.push_back(texture);
             texturesLoaded.push_back(texture); // add to loaded textures
+            //cout << texture.path << ", " << texture.type << endl;
         }
     }
+
+    
     return textures;
 }
 
@@ -134,7 +141,7 @@ GLuint TextureFromFile(const char* path, const string& directory)
 {
     string filename = string(path);
     filename = directory + '/' + filename;
-    std::cout << filename << std::endl;
+    //std::cout << "blabla" << filename << std::endl;
 
 
     unsigned int textureID;

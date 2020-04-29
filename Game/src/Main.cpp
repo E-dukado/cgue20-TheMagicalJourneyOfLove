@@ -315,7 +315,8 @@ int main(int argc, char** argv)
 
 	Texture tex("assets/textures/testTex2.jpg");
 	//use jpg for heightmap
-	Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/mountain.jpg");
+	Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass.jpg");
+	//Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/test_color.jpg");
 
 	//Load and initialize shaders
 	Shader shader("assets/shader/vertex.vert", "assets/shader/fragment.frag");
@@ -332,6 +333,7 @@ int main(int argc, char** argv)
 	//---------------------Models-------------------------------
 	Model treeModel("assets/models/tree/tree low.obj");
 	Model houseModel("assets/models/house/house.obj");
+	Model bunnyModel("assets/models/bunny/bunny.obj");
 
 	Terrain terrain;
 	terrain.generateTerrain();
@@ -425,6 +427,14 @@ int main(int argc, char** argv)
 			house = scale(house, vec3(0.1f, 0.1f, 0.1f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, house);
 			houseModel.draw(shader);
+
+
+			mat4 bunny = glm::mat4(1.0f);
+			
+			bunny = translate(bunny, vec3(-1.0f, -0.25f, 0.0f));
+			bunny = scale(bunny, vec3(10.05f, 10.05f, 10.05f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, bunny);
+			bunnyModel.draw(shader);
 
 
 			tex.bind();

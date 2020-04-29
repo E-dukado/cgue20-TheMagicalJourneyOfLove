@@ -3,8 +3,8 @@
 
 
 
-const int TERRAIN_DEPTH = 100;
-const int TERRAIN_WIDTH = 100;
+const int TERRAIN_DEPTH = 50;
+const int TERRAIN_WIDTH = 50;
 
 
 //ripple displacement speed
@@ -45,20 +45,18 @@ void Terrain::generateTerrain() {
 	for (j = 0; j < TERRAIN_DEPTH; j++) {
 		for (i = 0; i < TERRAIN_WIDTH; i++) {
 			vertices[count] = glm::vec3((float(i) / (TERRAIN_WIDTH - 1)), 0, (float(j) / (TERRAIN_DEPTH - 1)));
-			if (count % 4 == 0) {
-				texCoords[count] = glm::vec2(0, 0);
-			}
-			else if (count % 4 == 1) {
-				texCoords[count] = glm::vec2(1, 0);
-
-			}
-			else if (count % 4 == 2) {
-				texCoords[count] = glm::vec2(0, 1);
-			}
-			else if (count % 4 == 3) {
-				texCoords[count] = glm::vec2(1, 1);
-			}
+			
+			//if (count % 6 == 0) texCoords[count] = glm::vec2(0, 1);
+			//if (count % 6 == 1) texCoords[count] = glm::vec2(1, 1);
+			//if (count % 6 == 2) texCoords[count] = glm::vec2(1, 0);
+			//if (count % 6 == 3) texCoords[count] = glm::vec2(0, 0);
+			//if (count % 6 == 4) texCoords[count] = glm::vec2(0, 1);
+			//if (count % 6 == 5) texCoords[count] = glm::vec2(1, 1);
+			//if (count % 6 == 6) texCoords[count] = glm::vec2(1, 0);
+			//if (count % 6 == 7) texCoords[count] = glm::vec2(0, 0);
 	
+			texCoords[count] = glm::vec2((float)j / TERRAIN_DEPTH, (float)i / TERRAIN_WIDTH);
+
 			count++;
 		}
 	}
