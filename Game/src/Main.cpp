@@ -269,6 +269,11 @@ int main(int argc, char** argv)
 		vec3(-6.0f, 3.0f, -3.0f)
 	};
 
+	vec3 sunPos[] = {
+		vec3(-100.0f, 300.75f, -30.0f),
+		vec3(300.0f, 400.75f, 200.0f)
+	};
+
 
 	Assimp::Importer importer;
 
@@ -380,13 +385,13 @@ int main(int argc, char** argv)
 
 
 			//light properties, ambient is set rather low so different objects don't brighten each other up too much
-			//	directional light
-			shader.setVec3("dirLight.direction", 1, vec3(-0.2f, -1.0f, -0.3f));
-			shader.setVec3("dirLight.ambient", 1, glm::vec3(0.05, 0.05f, 0.05f));
-			shader.setVec3("dirLight.diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f)); 
-			shader.setVec3("dirLight.specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			//	directional light (white)
+			shader.setVec3("dirLights[0].direction", 1, vec3(0.0f, -1.0f, 0.0f));
+			shader.setVec3("dirLights[0].ambient", 1, glm::vec3(0.03, 0.03f, 0.03f));
+			shader.setVec3("dirLights[0].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f)); 
+			shader.setVec3("dirLights[0].specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
 
-			
+			/*
 			//	point light
 			shader.setVec3("pointLights[0].position", 1, lightPos[0]);
 			shader.setVec3("pointLights[0].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
@@ -403,7 +408,7 @@ int main(int argc, char** argv)
 			shader.setFloat("pointLights[1].constant", 0.4f);
 			shader.setFloat("pointLights[1].linear", 0.09f);
 			shader.setFloat("pointLights[1].quadratic", 0.32f);
-			
+			*/
 			
 
 
@@ -441,15 +446,48 @@ int main(int argc, char** argv)
 			houseModel.draw(shader);
 
 
+
+			//---------------------SUNS-----------------------------------------
+			//Lights
+			//	point light
+			shader.setVec3("pointLights[0].position", 1, sunPos[0] - vec3(0.0f, 0.0f, 0.0f));
+			shader.setVec3("pointLights[0].ambient", 1, vec3(1.0f, 0.0f, 0.0f));
+			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
+			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setFloat("pointLights[0].constant", 0.01f);
+			shader.setFloat("pointLights[0].linear", 0.0009f);
+			shader.setFloat("pointLights[0].quadratic", 0.000032f);
+			//	point light2
+			shader.setVec3("pointLights[1].position", 1, sunPos[1]);
+			shader.setVec3("pointLights[1].ambient", 1, vec3(0.0f, 0.0f, 1.0f));
+			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
+			shader.setVec3("pointLights[1].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setFloat("pointLights[1].constant", 0.02f);
+			shader.setFloat("pointLights[1].linear", 0.00006f);
+			shader.setFloat("pointLights[1].quadratic", 0.000022f);
+
+			//	directional light (red)
+			shader.setVec3("dirLights[1].direction", 1, vec3(0.2f, -1.0f, 0.3f));
+			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.10, 0.00f, 0.00f));
+			shader.setVec3("dirLights[1].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+
+			//	directional light (blue)
+			shader.setVec3("dirLights[2].direction", 1, vec3(-0.2f, -1.0f, -0.3f));
+			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.00, 0.00f, 0.10f));
+			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+
+			//Models
 			sunTex.bind();
 			mat4 redSun = glm::mat4(1.0f);
-			redSun = translate(redSun, vec3(-100.0f, 300.75f, -30.0f));
+			redSun = translate(redSun, sunPos[0]);
 			redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
 			redSunModel.draw(shader);
 
 			mat4 blueSun = glm::mat4(1.0f);
-			blueSun = translate(blueSun, vec3(300.0f, 400.75f, 200.0f));
+			blueSun = translate(blueSun, sunPos[1]);
 			blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, blueSun);
 			blueSunModel.draw(shader);
@@ -475,7 +513,7 @@ int main(int argc, char** argv)
 	
 			
 
-
+			/*
 			//setting up and drawing the white lamp cube
 			lampShader.use();
 			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
@@ -490,7 +528,7 @@ int main(int argc, char** argv)
 				lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
-
+			*/
 
 			heightmap.bind();
 			terrainShader.use();
