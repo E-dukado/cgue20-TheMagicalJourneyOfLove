@@ -315,7 +315,9 @@ int main(int argc, char** argv)
 
 	Texture tex("assets/textures/testTex2.jpg");
 	//use jpg for heightma
-	Texture sunTex("assets/models/sunRed/sun.jpg");
+	Texture redSunTex("assets/models/sunRed/sun.jpg");
+	Texture blueSunTex("assets/models/sunBlue/sun.jpg");
+
 
 	Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
 	//Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/test_color.jpg");
@@ -428,11 +430,20 @@ int main(int argc, char** argv)
 			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
 			treeModel.draw(shader);
+			
+	
 
-			//groundVAO.bind();
-			//mat4 ground = glm::mat4(1.0f);
-			//shader.setMat4("modelMatrix", 1, GL_FALSE, ground);
-			//glDrawArrays(GL_TRIANGLES, 0, 6);
+			for (unsigned int i = 0; i < 30; i++)
+			{
+				glm::mat4 treeLoop = glm::mat4(1.0f);
+				treeLoop = glm::scale(treeLoop, glm::vec3(0.05f, 0.05f, 0.05f));
+				treeLoop = glm::translate(treeLoop, vec3(909.0f * sin(i), -15.0f, 400.0f * sin(i*4)));
+				treeLoop = glm::rotate(treeLoop, glm::radians(20.0f * (i + 1)), glm::vec3(0, 1.0f, 0.0f));
+				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+				treeModel.draw(shader);
+			}
+
+	
 
 			mat4 house = glm::mat4(1.0f);
 			house = translate(house, vec3(-5.0f, -0.75f, -5.0f));
@@ -441,13 +452,14 @@ int main(int argc, char** argv)
 			houseModel.draw(shader);
 
 
-			sunTex.bind();
+			redSunTex.bind();
 			mat4 redSun = glm::mat4(1.0f);
 			redSun = translate(redSun, vec3(-100.0f, 300.75f, -30.0f));
 			redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
 			redSunModel.draw(shader);
 
+			blueSunTex.bind();
 			mat4 blueSun = glm::mat4(1.0f);
 			blueSun = translate(blueSun, vec3(300.0f, 400.75f, 200.0f));
 			blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
