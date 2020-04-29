@@ -315,7 +315,7 @@ int main(int argc, char** argv)
 
 	Texture tex("assets/textures/testTex2.jpg");
 	//use jpg for heightmap
-	Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass.jpg");
+	Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
 	//Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/test_color.jpg");
 
 	//Load and initialize shaders
