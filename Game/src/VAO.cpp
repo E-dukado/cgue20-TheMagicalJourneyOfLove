@@ -58,6 +58,20 @@ void VAO::addGround(VBO& vbo)
 
 }
 
+void VAO::addWood(VBO& vbo)
+{
+	bind();
+	vbo.bind();
+
+	// position attributes (first three each row)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// normals (middle three each row)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+}
+
 
 
 

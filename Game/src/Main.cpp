@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 	glfwSetScrollCallback(window, scroll_callback);
 
 	// set GL defaults
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
 	glClearColor(0.7, 0.75, 1.0, 1);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
@@ -310,10 +310,12 @@ int main(int argc, char** argv)
 	
 
 
-	//-----------Terrain-----------
+	//-----------Procedural Wood-----------
 
-	 
-	//-----------/Terrain----------
+	VAO woodVAO;
+	woodVAO.bind();
+	woodVAO.addWood(vbo);
+	//-----------/Procedural Wood----------
 
 
 	HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
@@ -335,8 +337,8 @@ int main(int argc, char** argv)
 	//shader.setInt("material.specular", 1);
 
 	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
-
 	Shader terrainShader("assets/shader/terrainVertex.vert", "assets/shader/terrainFragment.frag");
+	Shader woodShader("assets/shader/woodVertex.vert", "assets/shader/woodFragment.frag");
 
 
 
@@ -436,6 +438,8 @@ int main(int argc, char** argv)
 			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
 			treeModel.draw(shader);
 			
+
+
 	
 
 			for (unsigned int i = 0; i < 30; i++)
@@ -543,8 +547,8 @@ int main(int argc, char** argv)
 	
 			
 
-			/*
-			//setting up and drawing the white lamp cube
+			
+		/*	//setting up and drawing the white lamp cube
 			lampShader.use();
 			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
@@ -557,8 +561,8 @@ int main(int argc, char** argv)
 				lampModel = glm::scale(lampModel, glm::vec3(0.2f)); // a smaller cube
 				lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-			*/
+			}*/
+			
 
 			heightmap.bind();
 			terrainShader.use();
@@ -576,10 +580,28 @@ int main(int argc, char** argv)
 			terrain.drawTerrain();
 			
 			
+			//currently cube with wood texture
+			woodVAO.bind();
+			woodShader.use();
+			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			mat4 woodModel = mat4(1.0f);
+			woodModel = translate(woodModel, glm::vec3(1,1,1));
+			woodModel = scale(woodModel, glm::vec3(10.0, 10.0, 10.0));
+			woodShader.setMat4("modelMatrix", 1, GL_FALSE, woodModel);
+			woodShader.setFloat("frequency", 4);
+			woodShader.setFloat("noiseScale", 8);
+			woodShader.setFloat("ringScale", 0.6);
+			woodShader.setFloat("contrast", 4);
+			woodShader.setFloat("time", deltaTime);
+			woodShader.setVec3("color1", 1, glm::vec3(0.1, 0.08, 0.04));
+			woodShader.setVec3("color2", 1, glm::vec3(0.2, 0.1, 0.0));
+		 	//glDrawArrays(GL_TRIANGLES, 0, 36);	
+			
+			
 			
 
-
-
+		
 			// Swap buffers
 			glfwSwapBuffers(window);
 		}
@@ -640,11 +662,11 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 	lastX = xPos;
 	lastY = yPos;
 
-	/*if (_dragging) {
+	if (_dragging) {
 		cam.processMouseMovement(-xOffset, -yOffset);
-	}*/
+	}
 
-	cam.processMouseMovement(xOffset, yOffset);
+	//cam.processMouseMovement(xOffset, yOffset);
 }
 
 

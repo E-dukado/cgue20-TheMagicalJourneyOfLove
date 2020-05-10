@@ -15,6 +15,8 @@ public:
 	void addBuffer(VBO& vbo);
 	void addLamp(VBO& vbo);
 	void addGround(VBO& vbo);
+	void addWood(VBO& vbo);
+
 
 private:
 	GLuint vaoId;
