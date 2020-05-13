@@ -263,6 +263,15 @@ int main(int argc, char** argv)
 		-500, -0.5, 1000,
 	};
 
+	float quadVertices[] = {
+		-1.0, -1.0, 0.5,
+		 1.0,  1.0, 0.5,
+		-1.0,  1.0, 0.5,
+		-1.0, -1.0, 0.5,
+		 1.0, -1.0, 0.5,
+		 1.0,  1.0, 0.5
+	};
+
 	//lighting
 	vec3 lightPos[] = { 
 		vec3(1.0f, 0.6f, 1.0f),
@@ -298,15 +307,12 @@ int main(int argc, char** argv)
 	//------------ /lighting -------------------
 
 
-
-	//-----------ground---------
-	VAO groundVAO;
-	groundVAO.bind();
-	VBO groundVBO(groundVertices, sizeof(groundVertices));
-	groundVAO.addGround(groundVBO);
-
-	//----------/ground---------
-
+	//-------alphaBlend---------
+	VAO quadVAO;
+	quadVAO.bind();
+	VBO quadVBO(quadVertices, sizeof(quadVertices));
+	quadVAO.addQuad(quadVBO);
+	//-------/alphaBlend--------
 	
 
 
@@ -339,6 +345,7 @@ int main(int argc, char** argv)
 	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
 	Shader terrainShader("assets/shader/terrainVertex.vert", "assets/shader/terrainFragment.frag");
 	Shader woodShader("assets/shader/woodVertex.vert", "assets/shader/woodFragment.frag");
+	Shader quadShader("assets/shader/quadVertex.vert", "assets/shader/quadFragment.frag");
 
 
 
@@ -353,7 +360,7 @@ int main(int argc, char** argv)
 	Terrain terrain;
 	terrain.generateTerrain();
 
-
+	
 
 	
 
@@ -376,6 +383,7 @@ int main(int argc, char** argv)
 			// Poll events
 			glfwPollEvents();
 
+			glDisable(GL_BLEND);
 
 			shader.use();
 			shader.setVec3("viewPos", 1, cam.camPosition);
@@ -419,7 +427,7 @@ int main(int argc, char** argv)
 			// Update camera
 			mat4 projectionMatrix = mat4(1.0f);
 			processInput(window);
-			viewMatrix = cam.getViewMatrix();
+			mat4 viewMatrix = cam.getViewMatrix();
 			projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
 			shader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
@@ -485,32 +493,32 @@ int main(int argc, char** argv)
 			//Lights
 			//	point light
 			shader.setVec3("pointLights[0].position", 1, sunPos[0] - vec3(0.0f, 0.0f, 0.0f));
-			shader.setVec3("pointLights[0].ambient", 1, vec3(1.0f, 0.0f, 0.0f));
-			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
-			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setVec3("pointLights[0].ambient", 1, vec3(0.5f, 0.0f, 0.0f));
+			shader.setVec3("pointLights[0].diffuse", 1, vec3(1.0f, 0.2f, 0.2f));
+			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 0.2f, 0.2f));
 			shader.setFloat("pointLights[0].constant", 0.01f);
 			shader.setFloat("pointLights[0].linear", 0.0009f);
 			shader.setFloat("pointLights[0].quadratic", 0.000032f);
 			//	point light2
 			shader.setVec3("pointLights[1].position", 1, sunPos[1]);
-			shader.setVec3("pointLights[1].ambient", 1, vec3(0.0f, 0.0f, 1.0f));
-			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
-			shader.setVec3("pointLights[1].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setVec3("pointLights[1].ambient", 1, vec3(0.0f, 0.0f, 0.5f));
+			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.2f, 0.2f, 1.0f));
+			shader.setVec3("pointLights[1].specular", 1, vec3(0.2f, 0.2f, 1.0f));
 			shader.setFloat("pointLights[1].constant", 0.02f);
 			shader.setFloat("pointLights[1].linear", 0.00006f);
 			shader.setFloat("pointLights[1].quadratic", 0.000022f);
 
 			//	directional light (red)
 			shader.setVec3("dirLights[1].direction", 1, vec3(0.2f, -1.0f, 0.3f));
-			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.10, 0.00f, 0.00f));
+			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.7, 0.0f, 0.0f));
 			shader.setVec3("dirLights[1].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.7f, 0.1f, 0.1f));
 
 			//	directional light (blue)
 			shader.setVec3("dirLights[2].direction", 1, vec3(-0.2f, -1.0f, -0.3f));
-			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.00, 0.00f, 0.10f));
+			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.0f, 0.0f, 0.7f));
 			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.1f, 0.1f, 0.7f));
 
 			redSunTex.bind();
 			mat4 redSun = glm::mat4(1.0f);
@@ -596,9 +604,21 @@ int main(int argc, char** argv)
 			woodShader.setFloat("time", deltaTime);
 			woodShader.setVec3("color1", 1, glm::vec3(0.1, 0.08, 0.04));
 			woodShader.setVec3("color2", 1, glm::vec3(0.2, 0.1, 0.0));
-		 	//glDrawArrays(GL_TRIANGLES, 0, 36);	
+		 	glDrawArrays(GL_TRIANGLES, 0, 36);	
 			
-			
+
+			glEnable(GL_BLEND);
+			glBlendEquation(GL_FUNC_ADD);
+			glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
+			//glBlendFunc(GL_SRC_ALPHA, GL_SRC_COLOR);
+			quadShader.use();
+			quadVAO.bind();
+			//quadShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			//quadShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			mat4 quadModel = mat4(1.0f);
+			quadModel = scale(quadModel, vec3(10.0, 10.0, 10.0));
+			//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
+			glDrawArrays(GL_TRIANGLES, 0, 18);
 			
 
 		

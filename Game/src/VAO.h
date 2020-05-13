@@ -14,7 +14,7 @@ public:
 	void unbind();
 	void addBuffer(VBO& vbo);
 	void addLamp(VBO& vbo);
-	void addGround(VBO& vbo);
+	void addQuad(VBO& vbo);
 	void addWood(VBO& vbo);
 
 

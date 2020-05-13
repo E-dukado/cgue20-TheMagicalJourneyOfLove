@@ -48,7 +48,7 @@ void VAO::addLamp(VBO& vbo)
 
 }
 
-void VAO::addGround(VBO& vbo)
+void VAO::addQuad(VBO& vbo)
 {
 	bind();
 	vbo.bind();
