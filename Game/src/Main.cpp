@@ -27,6 +27,10 @@
 #include <assimp/postprocess.h>
 #include "Terrain.h"
 #include "HeightMap.h"
+#include "btBulletCollisionCommon.h"
+#include "btBulletDynamicsCommon.h"
+#include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
+
 
 using namespace glm;
 
@@ -64,6 +68,13 @@ float lastX = 0, lastY = 0;
 Camera cam;
 mat4 viewMatrix = cam.getViewMatrix();
 
+//Physics
+btDynamicsWorld* world;
+btDispatcher* dispatcher;
+btDefaultCollisionConfiguration* collisionConfig;
+btBroadphaseInterface* broadphase;
+btConstraintSolver* solver;
+vector<btRigidBody*> bodies;
 
 
 
@@ -360,6 +371,26 @@ int main(int argc, char** argv)
 	Terrain terrain;
 	terrain.generateTerrain();
 
+
+	//----------------------Physics------------------------------
+	collisionConfig = new btDefaultCollisionConfiguration();
+	dispatcher = new btCollisionDispatcher(collisionConfig);
+	broadphase = new btDbvtBroadphase();
+	solver = new btSequentialImpulseConstraintSolver();
+	world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
+	world->setGravity(btVector3(0, -9.8, 0));
+
+
+	btTransform t;
+	t.setIdentity();
+	t.setOrigin(btVector3(0, 0, 0));
+	btStaticPlaneShape* plane = new btStaticPlaneShape(btVector3(0, 1, 0), btScalar(0));
+	btMotionState* motion = new btDefaultMotionState(t);
+	btRigidBody::btRigidBodyConstructionInfo info(0.0, motion, plane);
+	btRigidBody* body = new btRigidBody(info);
+	world->addRigidBody(body);
+	bodies.push_back(body);
+
 	
 
 	
@@ -620,6 +651,8 @@ int main(int argc, char** argv)
 			//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
 			glDrawArrays(GL_TRIANGLES, 0, 18);
 			
+			//Physics
+			world->stepSimulation(deltaTime);
 
 		
 			// Swap buffers
@@ -635,7 +668,12 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 	destroyFramework();
 
-	
+	delete dispatcher;
+	delete collisionConfig;
+	delete solver;
+	delete world;
+	delete broadphase;
+
 	/* --------------------------------------------- */
 	// Destroy context and exit
 	/* --------------------------------------------- */
