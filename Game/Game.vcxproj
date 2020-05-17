@@ -44,17 +44,6 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\bullet\build3\vs2010\BulletCollision.vcxproj">
-      <Project>{3ff5f783-b776-1647-b970-bf4f114f6d42}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\bullet\build3\vs2010\BulletDynamics.vcxproj">
-      <Project>{cf7aed65-a891-704e-8277-20fb188ad55a}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\bullet\build3\vs2010\LinearMath.vcxproj">
-      <Project>{19567a35-95fe-c143-94c4-8d8c90572806}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{89281764-4192-41E0-B813-DFB62C075125}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -120,7 +109,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NO_BONUS;WIN32;_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)bullet\src;$(SolutionDir)assimp;$(SolutionDir)external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)assimp;$(SolutionDir)external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ProgramDataBaseFileName>$(TEMP)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -146,7 +135,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NO_BONUS;WIN32;_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)bullet\src;$(SolutionDir)assimp;$(SolutionDir)external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)assimp;$(SolutionDir)external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>
