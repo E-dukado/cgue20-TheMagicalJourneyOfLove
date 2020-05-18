@@ -40,11 +40,13 @@ using namespace glm;
 
 static void APIENTRY DebugCallbackDefault(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam);
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
+void setWindowMode();
 
 
 
@@ -56,6 +58,14 @@ static bool _wireframe = false;
 static bool _culling = false;
 static bool _dragging = false;
 static bool _strafing = false;
+static bool _fullscreen = false;
+
+//Screen/Window
+int screenWidth, screenHeight, windowWidth, windowHeight, refreshRate = 0;
+float aspectRatio = 0.0f;
+string windowTitle;
+GLFWwindow* window;
+GLFWmonitor* monitor;
 
 //frame time
 float deltaTime = 0.0f, lastFrame = 0.0f;
@@ -91,18 +101,17 @@ int main(int argc, char** argv)
 	INIReader reader("assets/settings.ini");
 
 	//window
-	int window_width = reader.GetInteger("window", "width", 800);
-	int window_height = reader.GetInteger("window", "height", 800);
-	int refresh_rate = reader.GetInteger("window", "refresh_rate", 60);
-	//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
-	bool fullscreen = reader.GetBoolean("window", "fullscreen", false);
-	std::string window_title = reader.Get("window", "title", "ECG");
+	windowWidth = reader.GetInteger("window", "width", 800);
+	windowHeight = reader.GetInteger("window", "height", 800);
+	refreshRate = reader.GetInteger("window", "refresh_rate", 60);
+	_fullscreen = reader.GetBoolean("window", "fullscreen", false);		//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
+	windowTitle = reader.Get("window", "title", "ECG");
 
 	//camera
 	//float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
 	float zNear = float(reader.GetReal("camera", "near", 0.1f));
 	float zFar = float(reader.GetReal("camera", "far", 500.0f));
-	float aspectRatio = window_width / window_height;
+	
 
 
 	//heightmap texture dimensions and half dimensions
@@ -120,7 +129,6 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 
 	glfwSetErrorCallback([](int error, const char* description) { std::cout << "GLFW error " << error << ": " << description << std::endl; });
-
 	if (!glfwInit()) {
 		EXIT_WITH_ERROR("Failed to init GLFW");
 	}
@@ -129,39 +137,32 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Request core profile
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);  // Create an OpenGL debug context 
-	glfwWindowHint(GLFW_REFRESH_RATE, refresh_rate); // Set refresh rate
+	glfwWindowHint(GLFW_REFRESH_RATE, refreshRate); // Set refresh rate
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	glfwWindowHint(GLFW_SAMPLES, 4);	// Enable antialiasing (4xMSAA)
 
-	// Enable antialiasing (4xMSAA)
-	glfwWindowHint(GLFW_SAMPLES, 4);
-
-	// Open window
-	GLFWmonitor* monitor = nullptr;
-
-	if (fullscreen)
-		monitor = glfwGetPrimaryMonitor();
-
-	GLFWwindow* window = glfwCreateWindow(window_width, window_height, window_title.c_str(), monitor, nullptr);
-
+	// Window Setup
+	const GLFWvidmode* screenStruct;
+	monitor = glfwGetPrimaryMonitor();
+	screenStruct = glfwGetVideoMode(monitor);
+	screenWidth = screenStruct->width;
+	screenHeight = screenStruct->height;
+	
+	window = glfwCreateWindow(screenWidth, screenHeight, windowTitle.c_str(), monitor, nullptr);
 	if (!window) {
 		EXIT_WITH_ERROR("Failed to create window");
 	}
 
-	// This function makes the context of the specified window current on the calling thread. 
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(window);	// This function makes the context of the specified window current on the calling thread. 
 
-	// Initialize GLEW
 	glewExperimental = true;
 	GLenum err = glewInit();
-	glViewport(0, 0, window_width, window_height);
-	void framebuffer_size_callback(GLFWwindow * window, int width, int height);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-
-	// If GLEW wasn't initialized
 	if (err != GLEW_OK) {
 		EXIT_WITH_ERROR("Failed to init GLEW: " << glewGetErrorString(err));
 	}
+
+	setWindowMode();
 
 	// Debug callback
 	if (glDebugMessageCallback != NULL) {
@@ -459,6 +460,7 @@ int main(int argc, char** argv)
 			mat4 projectionMatrix = mat4(1.0f);
 			processInput(window);
 			mat4 viewMatrix = cam.getViewMatrix();
+			cout << aspectRatio << endl;
 			projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
 			shader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
@@ -736,40 +738,48 @@ void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)	cam.processKeyboard(RIGHT, deltaTime);
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	// F1 - Wireframe
-	// F2 - Culling
-	// Esc - Exit
-
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
 	if (action != GLFW_RELEASE) return;
 
 	switch (key)
 	{
-	case GLFW_KEY_ESCAPE:
+	case GLFW_KEY_ESCAPE:					//									ESC
 		glfwSetWindowShouldClose(window, true);
 		break;
-	case GLFW_KEY_F1:
+	case GLFW_KEY_F1:						//Wireframe Toggle					F1
 		_wireframe = !_wireframe;
 		glPolygonMode(GL_FRONT_AND_BACK, _wireframe ? GL_LINE : GL_FILL);
 		break;
-	case GLFW_KEY_F2:
+	case GLFW_KEY_F2:						//Backface Culling Toggle			F2
 		_culling = !_culling;
 		if (_culling) glEnable(GL_CULL_FACE);
 		else glDisable(GL_CULL_FACE);
 		break;
+
+	case GLFW_KEY_F5:						//Fullscreen Toggle					F5
+		_fullscreen = !_fullscreen;
+		setWindowMode();
+		break;
 	}
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
-	glViewport(0, 0, width, height);
+	//glViewport(0, 0, windowWidth, windowHeight);
 }
 
-
-
+void setWindowMode() {
+	if (_fullscreen) {
+		glViewport(0, 0, screenWidth, screenHeight);
+		glfwSetWindowMonitor(window, monitor, 0, 0, screenWidth, screenHeight, refreshRate);
+		aspectRatio = float(screenWidth) / screenHeight;
+	} else {
+		glViewport(0, 0, windowWidth, windowHeight);
+		glfwSetWindowMonitor(window, nullptr, 0, 0, windowWidth, windowHeight, refreshRate);
+		aspectRatio = float(windowWidth) / windowHeight;
+	}
+}
 
 
 #pragma region debug
