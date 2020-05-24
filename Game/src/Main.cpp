@@ -30,6 +30,8 @@
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 
 using namespace glm;
