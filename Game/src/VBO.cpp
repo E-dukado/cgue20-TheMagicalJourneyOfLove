@@ -7,6 +7,13 @@ VBO::VBO(const void* data, GLuint size)
 	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 }
 
+VBO::VBO(GLuint size)
+{
+	glGenBuffers(1, &vboId);
+	glBindBuffer(GL_ARRAY_BUFFER, vboId);
+	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
+}
+
 VBO::~VBO()
 {
 	glDeleteBuffers(1, &vboId);

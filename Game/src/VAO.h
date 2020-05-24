@@ -16,6 +16,7 @@ public:
 	void addLamp(VBO& vbo);
 	void addQuad(VBO& vbo);
 	void addWood(VBO& vbo);
+	void addText(VBO& vbo);
 
 
 private:

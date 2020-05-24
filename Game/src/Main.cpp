@@ -49,6 +49,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void setWindowMode();
+void RenderText(Shader& s, string text, float x, float y, float scale, vec3 color, VAO textVAO, VBO textVBO);
 void displayFPS(float deltaTime);
 
 
@@ -89,6 +90,14 @@ btBroadphaseInterface* broadphase;
 btConstraintSolver* solver;
 vector<btRigidBody*> bodies;
 
+//Text Rendering
+struct Character {			/// Holds all state information relevant to a character as loaded using FreeType
+	unsigned int	textureID; // ID handle of the glyph texture
+	ivec2			size;      // Size of glyph
+	ivec2			bearing;   // Offset from baseline to left/top of glyph
+	unsigned int	advance;   // Horizontal offset to advance to next glyph
+};
+map<GLchar, Character> Characters;
 
 
 /* --------------------------------------------- */
@@ -136,7 +145,7 @@ int main(int argc, char** argv)
 		EXIT_WITH_ERROR("Failed to init GLFW");
 	}
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // Request OpenGL version 4.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // Request OpenGL version 4.5
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Request core profile
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);  // Create an OpenGL debug context 
@@ -398,28 +407,68 @@ int main(int argc, char** argv)
 
 	
 	//------------------------Text Rendering---------------------
-	FT_Library ft;																										//init
-	if (FT_Init_FreeType(&ft)) std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;			//init
-	FT_Face face;																										//init
+	FT_Library ft;																												//init
+	if (FT_Init_FreeType(&ft)) std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;					//init
+	FT_Face face;																												//init
 	if (FT_New_Face(ft, "assets/fonts/arial.ttf", 0, &face)) std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;	//init
 
-	FT_Set_Pixel_Sizes(face, 0, 48);							//Font size (width == 0 -> width is dynamically calculated!)
+	FT_Set_Pixel_Sizes(face, 0, 48);										//Font size (width == 0 -> width is dynamically calculated!)
 	
-	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER)) std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;	//Load character "X" for testing init
+	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER)) std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;			//Load character "X" for testing init
 
-	struct Character {			/// Holds all state information relevant to a character as loaded using FreeType
-		unsigned int TextureID; // ID handle of the glyph texture
-		glm::ivec2   Size;      // Size of glyph
-		glm::ivec2   Bearing;   // Offset from baseline to left/top of glyph
-		unsigned int Advance;   // Horizontal offset to advance to next glyph
-	};
-	map<GLchar, Character> Characters;
+	
+	
 
-	Shader textShader("assets/shader/text.vert", "assets/shader/text.frag");
+	Shader textShader("assets/shader/textVertex.vert", "assets/shader/textFragment.frag");
 	mat4 textProjection = ortho(0.0f, static_cast<float>(windowWidth), 0.0f, static_cast<float>(windowHeight));
 	textShader.use();
-	//glUniformMatrix4fv(glGetUniformLocation(shader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(textProjection)); //adapt to shader when created
-	
+	textShader.setMat4("projection", 1, GL_FALSE, textProjection);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
+
+	for (unsigned char c = 0; c < 128; c++) {
+		
+		if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {	// load character glyph 
+			cout << "FREETYPE: Failed to load Glyph" << std::endl;
+			continue;
+		}
+		
+		unsigned int charTexture;		// generate texture
+		glGenTextures(1, &charTexture);
+		glBindTexture(GL_TEXTURE_2D, charTexture);
+		glTexImage2D(GL_TEXTURE_2D,	0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows,	0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+
+		// set texture options
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// store character for later use
+		Character character = {
+			charTexture,
+			ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+			ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+			face->glyph->advance.x
+		};
+		Characters.insert(pair<char, Character>(c, character));
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	// clear FreeType resources when finished
+	FT_Done_Face(face);
+	FT_Done_FreeType(ft);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	VAO textVAO;
+	VBO textVBO(sizeof(float) * 6 * 4);
+	textVAO.addText(textVBO);
+	textVBO.unbind();
+	textVAO.unbind();
+
+
 
 #pragma endregion
 
@@ -649,11 +698,14 @@ int main(int argc, char** argv)
 			//terrain.drawTerrain();
 			
 			
+			
 			//currently cube with wood texture
-			woodVAO.bind();
-			woodShader.use();
+			lampShader.use();
 			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+
+			woodVAO.bind();
+			woodShader.use();
 			mat4 woodModel = mat4(1.0f);
 			woodModel = translate(woodModel, glm::vec3(1,1,1));
 			woodModel = scale(woodModel, glm::vec3(10.0, 10.0, 10.0));
@@ -667,6 +719,7 @@ int main(int argc, char** argv)
 			woodShader.setVec3("color2", 1, glm::vec3(0.2, 0.1, 0.0));
 		 	glDrawArrays(GL_TRIANGLES, 0, 36);	
 
+			
 
 			shader.use();
 
@@ -691,13 +744,14 @@ int main(int argc, char** argv)
 			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.2f, 0.2f, 0.2f));
 			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.1f, 0.1f, 0.1f));
 
+			
 			mat4 terrainC = glm::mat4(1.0f);
 			terrainC = scale(terrainC, vec3(3.0f, 3.0f, 3.0f));
 			terrainC = translate(terrainC, vec3(0.0f, 45.0f, 0.0f));
 			shader.setMat4("modelMatrix", 1, GL_FALSE, terrainC);
 			terrainModelC.draw(shader);
 			
-
+			
 			glEnable(GL_BLEND);
 			glBlendEquation(GL_FUNC_ADD);
 			glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
@@ -710,10 +764,60 @@ int main(int argc, char** argv)
 			quadModel = scale(quadModel, vec3(10.0, 10.0, 10.0));
 			//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
 			glDrawArrays(GL_TRIANGLES, 0, 18);
-
-
-			displayFPS(deltaTime);
 			
+			
+
+			//-------------------------FPS Text Rendering-----------------------------
+			//displayFPS(deltaTime);
+			//RenderText(shader, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), textVAO, textVBO);
+			
+			// activate corresponding render state	
+			vec3 textColor = vec3(0.5, 0.8f, 0.2f);
+			string text = "Frame rate: " + to_string(1.0f / deltaTime);
+			float textX = 25.0f;
+			float textY = 25.0f;
+			float textScale = 1.0f;
+
+			textShader.use();
+			textShader.setVec3("textColor", 1, textColor);
+			glActiveTexture(GL_TEXTURE0);
+			textVAO.bind();
+
+			// iterate through all characters
+			string::const_iterator c;
+			for (c = text.begin(); c != text.end(); c++)
+			{
+				Character ch = Characters[*c];
+
+				float xpos = textX + ch.bearing.x * textScale;
+				float ypos = textY - (ch.size.y - ch.bearing.y) * textScale;
+
+				float w = ch.size.x * textScale;
+				float h = ch.size.y * textScale;
+				// update VBO for each character
+				float vertices[6][4] = {
+					{ xpos,     ypos + h,   0.0f, 0.0f },
+					{ xpos,     ypos,       0.0f, 1.0f },
+					{ xpos + w, ypos,       1.0f, 1.0f },
+
+					{ xpos,     ypos + h,   0.0f, 0.0f },
+					{ xpos + w, ypos,       1.0f, 1.0f },
+					{ xpos + w, ypos + h,   1.0f, 0.0f }
+				};
+				// render glyph texture over quad
+				glBindTexture(GL_TEXTURE_2D, ch.textureID);
+				// update content of VBO memory
+				textVBO.bind();
+				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+				textVBO.unbind();
+				// render quad
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+				// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+				textX += (ch.advance >> 6) * textScale; // bitshift by 6 to get value in pixels (2^6 = 64)
+			}
+			glBindVertexArray(0);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
 			
 			//Physics
 			world->stepSimulation(deltaTime);
@@ -841,6 +945,50 @@ void setWindowMode() {
 		glfwSetWindowMonitor(window, nullptr, 0, 0, windowWidth, windowHeight, refreshRate);
 		aspectRatio = float(windowWidth) / windowHeight;
 	}
+}
+
+void RenderText(Shader& shader, string text, float x, float y, float scale, vec3 color, VAO textVAO, VBO textVBO)
+{
+	// activate corresponding render state	
+	shader.use();
+	shader.setVec3("textColor", 1, color);
+	glActiveTexture(GL_TEXTURE0);
+	textVAO.bind();
+
+	// iterate through all characters
+	string::const_iterator c;
+	for (c = text.begin(); c != text.end(); c++)
+	{
+		Character ch = Characters[*c];
+
+		float xpos = x + ch.bearing.x * scale;
+		float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+
+		float w = ch.size.x * scale;
+		float h = ch.size.y * scale;
+		// update VBO for each character
+		float vertices[6][4] = {
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos,     ypos,       0.0f, 1.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+			{ xpos + w, ypos + h,   1.0f, 0.0f }
+		};
+		// render glyph texture over quad
+		glBindTexture(GL_TEXTURE_2D, ch.textureID);
+		// update content of VBO memory
+		textVBO.bind();
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+		textVBO.unbind();
+		// render quad
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+		x += (ch.advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+	}
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 

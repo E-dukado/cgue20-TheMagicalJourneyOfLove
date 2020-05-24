@@ -7,6 +7,7 @@ class VBO
 {
 public:
 	VBO(const void* data, GLuint size);
+	VBO(GLuint size);
 	~VBO();
 
 	void bind() const;

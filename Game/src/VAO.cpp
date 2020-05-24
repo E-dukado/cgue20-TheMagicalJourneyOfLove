@@ -72,6 +72,16 @@ void VAO::addWood(VBO& vbo)
 	glEnableVertexAttribArray(1);
 }
 
+void VAO::addText(VBO& vbo)
+{
+	bind();
+	vbo.bind();
+
+	// position attributes (first three each row)
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+}
+
 
 
 
