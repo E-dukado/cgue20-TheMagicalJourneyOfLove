@@ -6,6 +6,7 @@ layout(binding=11) uniform sampler2D mountain;
 in float height;
 in vec3 Position;
 in vec2 texCoord;
+in vec3 Normal;
 
 out vec4 FragColor;
 

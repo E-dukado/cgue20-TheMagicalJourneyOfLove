@@ -23,6 +23,7 @@ class Terrain
 {
 public:
 	void generateTerrain();
+	void generateNormals();
 	void drawTerrain();
 
 };
