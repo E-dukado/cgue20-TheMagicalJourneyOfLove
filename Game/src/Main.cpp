@@ -47,6 +47,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void setWindowMode();
+void displayFPS(float deltaTime);
 
 
 
@@ -409,6 +410,7 @@ int main(int argc, char** argv)
 			deltaTime = currentFrame - lastFrame;
 			lastFrame = currentFrame;
 			
+
 			// Clear backbuffer
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -460,7 +462,6 @@ int main(int argc, char** argv)
 			mat4 projectionMatrix = mat4(1.0f);
 			processInput(window);
 			mat4 viewMatrix = cam.getViewMatrix();
-			cout << aspectRatio << endl;
 			projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
 			shader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
@@ -652,6 +653,10 @@ int main(int argc, char** argv)
 			quadModel = scale(quadModel, vec3(10.0, 10.0, 10.0));
 			//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
 			glDrawArrays(GL_TRIANGLES, 0, 18);
+
+
+			displayFPS(deltaTime);
+			
 			
 			//Physics
 			world->stepSimulation(deltaTime);
@@ -781,6 +786,10 @@ void setWindowMode() {
 	}
 }
 
+
+void displayFPS(float deltaTime) {
+	cout << "Frame rate: " << 1.0f / deltaTime << endl;
+}
 
 #pragma region debug
 
