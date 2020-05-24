@@ -397,13 +397,27 @@ int main(int argc, char** argv)
 
 	
 	//------------------------Text Rendering---------------------
-	FT_Library ft;
-	if (FT_Init_FreeType(&ft))
-		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+	FT_Library ft;																										//init
+	if (FT_Init_FreeType(&ft)) std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;			//init
+	FT_Face face;																										//init
+	if (FT_New_Face(ft, "assets/fonts/arial.ttf", 0, &face)) std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;	//init
 
-	FT_Face face;
-	if (FT_New_Face(ft, "fonts/arial.ttf", 0, &face))
-		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+	FT_Set_Pixel_Sizes(face, 0, 48);							//Font size (width == 0 -> width is dynamically calculated!)
+	
+	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER)) std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;	//Load character "X" for testing init
+
+	struct Character {			/// Holds all state information relevant to a character as loaded using FreeType
+		unsigned int TextureID; // ID handle of the glyph texture
+		glm::ivec2   Size;      // Size of glyph
+		glm::ivec2   Bearing;   // Offset from baseline to left/top of glyph
+		unsigned int Advance;   // Horizontal offset to advance to next glyph
+	};
+	map<GLchar, Character> Characters;
+
+	Shader textShader("assets/shader/text.vert", "assets/shader/text.frag");
+	mat4 textProjection = ortho(0.0f, static_cast<float>(windowWidth), 0.0f, static_cast<float>(windowHeight));
+	textShader.use();
+	//glUniformMatrix4fv(glGetUniformLocation(shader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(textProjection)); //adapt to shader when created
 	
 
 #pragma endregion
