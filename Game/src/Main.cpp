@@ -339,7 +339,7 @@ int main(int argc, char** argv)
 	//-----------/Procedural Wood----------
 
 
-	HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
+	//HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
 
 	Texture tex("assets/textures/testTex2.jpg");
 	//use jpg for heightma
@@ -347,7 +347,7 @@ int main(int argc, char** argv)
 	Texture blueSunTex("assets/models/sunBlue/sun.jpg");
 
 
-	Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
+	//Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
 	//Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/test_color.jpg");
 
 
@@ -370,10 +370,11 @@ int main(int argc, char** argv)
 	Model wizardModel("assets/models/sorcerer/wizard.obj");
 	Model redSunModel("assets/models/sunRed/redSun.obj");
 	Model blueSunModel("assets/models/sunBlue/sunBlue.obj");
+	Model terrainModelC("assets/models/Terrain/terrain.obj");
 
 
-	Terrain terrain;
-	terrain.generateTerrain();
+	//Terrain terrain;
+	//terrain.generateTerrain();
 
 
 	//----------------------Physics------------------------------
@@ -478,6 +479,52 @@ int main(int argc, char** argv)
 			shader.setFloat("pointLights[1].linear", 0.09f);
 			shader.setFloat("pointLights[1].quadratic", 0.32f);
 			*/
+
+			//---------------------SUNS-----------------------------------------
+//Lights
+//	point light
+			shader.setVec3("pointLights[0].position", 1, sunPos[0] - vec3(0.0f, 0.0f, 0.0f));
+			shader.setVec3("pointLights[0].ambient", 1, vec3(0.5f, 0.0f, 0.0f));
+			shader.setVec3("pointLights[0].diffuse", 1, vec3(1.0f, 0.2f, 0.2f));
+			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 0.2f, 0.2f));
+			shader.setFloat("pointLights[0].constant", 0.01f);
+			shader.setFloat("pointLights[0].linear", 0.0009f);
+			shader.setFloat("pointLights[0].quadratic", 0.000032f);
+			//	point light2
+			shader.setVec3("pointLights[1].position", 1, sunPos[1]);
+			shader.setVec3("pointLights[1].ambient", 1, vec3(0.0f, 0.0f, 0.5f));
+			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.2f, 0.2f, 1.0f));
+			shader.setVec3("pointLights[1].specular", 1, vec3(0.2f, 0.2f, 1.0f));
+			shader.setFloat("pointLights[1].constant", 0.02f);
+			shader.setFloat("pointLights[1].linear", 0.00006f);
+			shader.setFloat("pointLights[1].quadratic", 0.000022f);
+
+			//	directional light (red)
+			shader.setVec3("dirLights[1].direction", 1, vec3(0.2f, -1.0f, 0.3f));
+			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.7, 0.0f, 0.0f));
+			shader.setVec3("dirLights[1].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.7f, 0.1f, 0.1f));
+
+			//	directional light (blue)
+			shader.setVec3("dirLights[2].direction", 1, vec3(-0.2f, -1.0f, -0.3f));
+			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.0f, 0.0f, 0.7f));
+			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.1f, 0.1f, 0.7f));
+
+			redSunTex.bind();
+			mat4 redSun = glm::mat4(1.0f);
+			redSun = translate(redSun, sunPos[0]);
+			redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
+			redSunModel.draw(shader);
+
+			blueSunTex.bind();
+			mat4 blueSun = glm::mat4(1.0f);
+			blueSun = translate(blueSun, sunPos[1]);
+			blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
+			shader.setMat4("modelMatrix", 1, GL_FALSE, blueSun);
+			blueSunModel.draw(shader);
+
 			
 
 
@@ -502,6 +549,8 @@ int main(int argc, char** argv)
 			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
 			treeModel.draw(shader);
+
+			
 			
 
 
@@ -546,51 +595,7 @@ int main(int argc, char** argv)
 
 
 
-			//---------------------SUNS-----------------------------------------
-			//Lights
-			//	point light
-			shader.setVec3("pointLights[0].position", 1, sunPos[0] - vec3(0.0f, 0.0f, 0.0f));
-			shader.setVec3("pointLights[0].ambient", 1, vec3(0.5f, 0.0f, 0.0f));
-			shader.setVec3("pointLights[0].diffuse", 1, vec3(1.0f, 0.2f, 0.2f));
-			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 0.2f, 0.2f));
-			shader.setFloat("pointLights[0].constant", 0.01f);
-			shader.setFloat("pointLights[0].linear", 0.0009f);
-			shader.setFloat("pointLights[0].quadratic", 0.000032f);
-			//	point light2
-			shader.setVec3("pointLights[1].position", 1, sunPos[1]);
-			shader.setVec3("pointLights[1].ambient", 1, vec3(0.0f, 0.0f, 0.5f));
-			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.2f, 0.2f, 1.0f));
-			shader.setVec3("pointLights[1].specular", 1, vec3(0.2f, 0.2f, 1.0f));
-			shader.setFloat("pointLights[1].constant", 0.02f);
-			shader.setFloat("pointLights[1].linear", 0.00006f);
-			shader.setFloat("pointLights[1].quadratic", 0.000022f);
 
-			//	directional light (red)
-			shader.setVec3("dirLights[1].direction", 1, vec3(0.2f, -1.0f, 0.3f));
-			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.7, 0.0f, 0.0f));
-			shader.setVec3("dirLights[1].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.7f, 0.1f, 0.1f));
-
-			//	directional light (blue)
-			shader.setVec3("dirLights[2].direction", 1, vec3(-0.2f, -1.0f, -0.3f));
-			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.0f, 0.0f, 0.7f));
-			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.1f, 0.1f, 0.7f));
-
-			redSunTex.bind();
-			mat4 redSun = glm::mat4(1.0f);
-			redSun = translate(redSun, sunPos[0]);
-			redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
-			redSunModel.draw(shader);
-
-			blueSunTex.bind();
-			mat4 blueSun = glm::mat4(1.0f);
-			blueSun = translate(blueSun, sunPos[1]);
-			blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, blueSun);
-			blueSunModel.draw(shader);
-			
 	
 
 			tex.bind();
@@ -629,7 +634,7 @@ int main(int argc, char** argv)
 			}*/
 			
 
-			heightmap.bind();
+			/*heightmap.bind();
 			terrainShader.use();
 			mat4 terrainModel = mat4(1.0f);
 			terrainModel = translate(terrainModel, glm::vec3(0, 65.0f, 0));
@@ -640,9 +645,8 @@ int main(int argc, char** argv)
 			terrainShader.setInt2("HALF_TERRAIN_SIZE", TERRAIN_WIDTH >> 1, TERRAIN_DEPTH >> 1);
 			terrainShader.setFloat("scale", heightMapScale);
 			terrainShader.setFloat("half_scale", heightMapHalfScale);
-			terrainTex.doubleBind();
-
-			terrain.drawTerrain();
+			terrainTex.doubleBind();*/
+			//terrain.drawTerrain();
 			
 			
 			//currently cube with wood texture
@@ -662,6 +666,36 @@ int main(int argc, char** argv)
 			woodShader.setVec3("color1", 1, glm::vec3(0.1, 0.08, 0.04));
 			woodShader.setVec3("color2", 1, glm::vec3(0.2, 0.1, 0.0));
 		 	glDrawArrays(GL_TRIANGLES, 0, 36);	
+
+
+			shader.use();
+
+			shader.setVec3("pointLights[0].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
+			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.2f, 0.2f, 0.62));
+			shader.setVec3("pointLights[0].specular", 1, vec3(0.1f, 0.1f, 0.1f));
+			
+
+			//	point light2
+			shader.setVec3("pointLights[1].ambient", 1, vec3(0.3f, 0.3f, 0.4f));
+			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.2f, 0.2f, 2.0f));
+			shader.setVec3("pointLights[1].specular", 1, vec3(0.2f, 0.2f, 2.0f));
+
+
+			//	directional light (red)
+			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.2, 0.2f, 0.2f));
+			shader.setVec3("dirLights[1].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.2f, 0.1f, 0.1f));
+
+			//	directional light (blue)
+			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.0f, 0.0f, 0.1f));
+			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.2f, 0.2f, 0.2f));
+			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.1f, 0.1f, 0.1f));
+
+			mat4 terrainC = glm::mat4(1.0f);
+			terrainC = scale(terrainC, vec3(3.0f, 3.0f, 3.0f));
+			terrainC = translate(terrainC, vec3(0.0f, 45.0f, 0.0f));
+			shader.setMat4("modelMatrix", 1, GL_FALSE, terrainC);
+			terrainModelC.draw(shader);
 			
 
 			glEnable(GL_BLEND);
