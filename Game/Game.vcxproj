@@ -6,9 +6,11 @@
     <ClCompile Include="src\HeightMap.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\Particles.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
+    <ClCompile Include="src\Tex2.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\VAO.cpp" />
     <ClCompile Include="src\VBO.cpp" />
@@ -17,8 +19,10 @@
     <ClInclude Include="src\HeightMap.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\Terrain.h" />
+    <ClInclude Include="src\Tex2.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\OBJLoader.h" />
     <ClInclude Include="src\INIReader.h" />

@@ -17,6 +17,7 @@ public:
 	void addQuad(VBO& vbo);
 	void addWood(VBO& vbo);
 	void addText(VBO& vbo);
+	void addParticles(VBO& vbo);
 
 
 private:

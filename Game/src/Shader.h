@@ -35,6 +35,8 @@ public:
 
 	void setVec3(const std::string& name, GLsizei count, glm::vec3& value) const;
 
+	void setVec4(const std::string& name, GLsizei count, glm::vec4& value) const;
+
 	//void setMat4(const std::string& name, GLsizei count, GLboolean transpose, glm::mat4& value) const;
 	void setMat4(const std::string& name, GLsizei count, GLboolean transpose, glm::mat4 value) const;
 

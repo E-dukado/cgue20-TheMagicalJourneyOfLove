@@ -18,6 +18,7 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "Model.h"
+#include "Particles.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -263,30 +264,6 @@ int main(int argc, char** argv)
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
-
-	vec3 cubePositions[] = {
-		glm::vec3(1.0f, -0.5f, 0.0f),
-		glm::vec3(5.0f, 7.0f, 1.0f),
-		glm::vec3(-3.0f, 3.4f, -5.0f),
-		glm::vec3(12.0f, 1.5f, 4.0f),
-		glm::vec3(-5.5f, 5.0f, -4.0f),
-		glm::vec3(4.0f, -1.3f, -3.0f),
-		glm::vec3(-2.2f, 2.0f, -1.6f),
-		glm::vec3(6.0f, -5.6f, 2.0f),
-		glm::vec3(3.4f, -2.3f, 2.0f),
-		glm::vec3(-4.0f, -1.1f, -3.3f)
-	};
-
-	float groundVertices[] = {
-		-500, -0.5, 1000,
-		500, -0.5, 1000,
-		500, -0.5, -1000,
-
-		500, -0.5, -1000,
-		-500, -0.5, -1000,
-		-500, -0.5, 1000,
-	};
-
 	float quadVertices[] = {
 		-1.0, -1.0, 0.5,
 		 1.0,  1.0, 0.5,
@@ -349,6 +326,7 @@ int main(int argc, char** argv)
 
 
 	//HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
+	
 
 	Texture tex("assets/textures/testTex2.jpg");
 	//use jpg for heightma
@@ -467,6 +445,16 @@ int main(int argc, char** argv)
 	textVAO.addText(textVBO);
 	textVBO.unbind();
 	textVAO.unbind();
+
+
+
+	Texture smokeTex("assets/textures/smoke.jpg");
+	Shader particleShader("assets/shader/particles.vert", "assets/shader/particles.frag");
+	ParticleGenerator *Particles;
+	Texture2D smoker;
+
+	Particles = new ParticleGenerator(particleShader, smokeTex, 500);
+
 
 
 
@@ -644,43 +632,10 @@ int main(int argc, char** argv)
 
 
 
-
-	
-
 			tex.bind();
 			vao.bind();
 
-			//model matrix changing over time, that's why it's declared in the game loop currently
-			for (unsigned int i = 0; i < 10; i++)
-			{
-				glm::mat4 squareModel = glm::mat4(1.0f);
-				squareModel = glm::translate(squareModel, cubePositions[i]);
-				squareModel = glm::rotate(squareModel, currentFrame * glm::radians(20.0f * (i+1)), glm::vec3(1.0f, 0.3f, 0.5f));
-				squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
-				shader.setMat4("modelMatrix", 1, GL_FALSE, squareModel);
 
-				//render
-				//glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-	
-			
-
-			
-		/*	//setting up and drawing the white lamp cube
-			lampShader.use();
-			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
-			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-			lampVAO.bind();
-
-			for (unsigned int i = 0; i < 2; i++)
-			{
-				mat4 lampModel = mat4(1.0f);
-				lampModel = translate(lampModel, lightPos[i]);
-				lampModel = glm::scale(lampModel, glm::vec3(0.2f)); // a smaller cube
-				lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}*/
 			
 
 			/*heightmap.bind();
@@ -750,6 +705,12 @@ int main(int argc, char** argv)
 			terrainC = translate(terrainC, vec3(0.0f, 45.0f, 0.0f));
 			shader.setMat4("modelMatrix", 1, GL_FALSE, terrainC);
 			terrainModelC.draw(shader);
+
+			//smokeTex.bind();
+			//particleShader.use();
+			//particleShader.setInt("sprite", 0);
+			//particleShader.setMat4("projection", 1, GL_FALSE, projectionMatrix);
+			//Particles->Draw();
 			
 			
 			glEnable(GL_BLEND);
@@ -817,6 +778,10 @@ int main(int argc, char** argv)
 			}
 			glBindVertexArray(0);
 			glBindTexture(GL_TEXTURE_2D, 0);
+
+
+
+	
 
 			
 			//Physics
