@@ -208,9 +208,6 @@ int main(int argc, char** argv)
 
 #pragma region geometry and shaders
 
-	
-
-	
 	// Geometry
 	//currently textures are not on the top and bottom
 	float cubeVertices[] = {
@@ -305,13 +302,10 @@ int main(int argc, char** argv)
 
 
 	//------------ lighting -------------------
-
 	VAO lampVAO;
 	lampVAO.bind();
 	VBO lampVbo(cubeVertices, sizeof(cubeVertices));
 	lampVAO.addLamp(lampVbo);
-	
-
 	//------------ /lighting -------------------
 
 
@@ -325,7 +319,6 @@ int main(int argc, char** argv)
 
 
 	//-----------Procedural Wood-----------
-
 	VAO woodVAO;
 	woodVAO.bind();
 	VBO woodVbo(cubeVertices, sizeof(cubeVertices));
@@ -334,8 +327,6 @@ int main(int argc, char** argv)
 
 	Texture redSunTex("assets/models/sunRed/sun.jpg");
 	Texture blueSunTex("assets/models/sunBlue/sun.jpg");
-
-
 	//Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
 	//Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/test_color.jpg");
 
