@@ -48,6 +48,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
+void readSettings(string source);
+void windowSetup();
 void setWindowMode();
 void updateFrameTime();
 void updateShaderMatrices(Shader& shader, Shader& collisionShader);
@@ -115,25 +117,8 @@ map<GLchar, Character> Characters;
 
 int main(int argc, char** argv)
 {
-	/* --------------------------------------------- */
-	// Load settings.ini
-	/* --------------------------------------------- */
-
-	INIReader reader("assets/settings.ini");
-
-	//window
-	windowWidth = reader.GetInteger("window", "width", 800);
-	windowHeight = reader.GetInteger("window", "height", 800);
-	refreshRate = reader.GetInteger("window", "refresh_rate", 60);
-	_fullscreen = reader.GetBoolean("window", "fullscreen", false);		//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
-	windowTitle = reader.Get("window", "title", "ECG");
-
-	//camera
-	//float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
-	zNear = float(reader.GetReal("camera", "near", 0.1f));
-	zFar = float(reader.GetReal("camera", "far", 500.0f));
+	readSettings("assets/settings.ini");
 	
-
 	//heightmap texture dimensions and half dimensions
 	const int TERRAIN_WIDTH = 1024;
 	const int TERRAIN_DEPTH = 1024;
@@ -151,20 +136,7 @@ int main(int argc, char** argv)
 	glfwSetErrorCallback([](int error, const char* description) { std::cout << "GLFW error " << error << ": " << description << std::endl; });
 	if (!glfwInit()) { EXIT_WITH_ERROR("Failed to init GLFW"); }
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // Request OpenGL version 4.5
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Request core profile
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);  // Create an OpenGL debug context 
-	glfwWindowHint(GLFW_REFRESH_RATE, refreshRate); // Set refresh rate
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-	glfwWindowHint(GLFW_SAMPLES, 4);	// Enable antialiasing (4xMSAA)
-
-	// Window Setup
-	monitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* screenStruct;
-	screenStruct = glfwGetVideoMode(monitor);
-	screenWidth = screenStruct->width;
-	screenHeight = screenStruct->height;
+	windowSetup();
 	
 	window = glfwCreateWindow(screenWidth, screenHeight, windowTitle.c_str(), monitor, nullptr);
 	if (!window) { EXIT_WITH_ERROR("Failed to create window"); }
@@ -177,13 +149,9 @@ int main(int argc, char** argv)
 
 	setWindowMode();
 
-	// Debug callback
 	if (glDebugMessageCallback != NULL) {// Register your callback function.
 		glDebugMessageCallback(DebugCallbackDefault, NULL);
-		// Enable synchronous callback. This ensures that your callback function is called
-		// right after an error has occurred. This capability is not defined in the AMD
-		// version.
-		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);  // Enable synchronous callback. This ensures that your callback function is called right after an error has occurred.
 	}
 
 
@@ -496,6 +464,41 @@ int main(int argc, char** argv)
 	return EXIT_SUCCESS;
 }
 
+
+
+//------------------------Setup------------------------------------------
+void readSettings(string source) {
+	INIReader reader(source);
+
+	//window
+	windowWidth = reader.GetInteger("window", "width", 800);
+	windowHeight = reader.GetInteger("window", "height", 800);
+	refreshRate = reader.GetInteger("window", "refresh_rate", 60);
+	_fullscreen = reader.GetBoolean("window", "fullscreen", false);		//to change to fullscreen mode, change value of "fullscreen" in settings.ini to true
+	windowTitle = reader.Get("window", "title", "ECG");
+
+	//camera
+	//float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
+	zNear = float(reader.GetReal("camera", "near", 0.1f));
+	zFar = float(reader.GetReal("camera", "far", 500.0f));
+}
+
+void windowSetup() {
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // Request OpenGL version 4.5
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Request core profile
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);  // Create an OpenGL debug context 
+	glfwWindowHint(GLFW_REFRESH_RATE, refreshRate); // Set refresh rate
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	glfwWindowHint(GLFW_SAMPLES, 4);	// Enable antialiasing (4xMSAA)
+
+	// Window Setup
+	monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* screenStruct;
+	screenStruct = glfwGetVideoMode(monitor);
+	screenWidth = screenStruct->width;
+	screenHeight = screenStruct->height;
+}
 
 //------------------------Controls & Callbacks---------------------------
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
