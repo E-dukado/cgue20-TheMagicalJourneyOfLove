@@ -7,6 +7,7 @@
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\Geometry.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
     <ClCompile Include="src\Texture.cpp" />
@@ -14,6 +15,7 @@
     <ClCompile Include="src\VBO.cpp" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\EBO.h" />
+    <ClInclude Include="src\Geometry.h" />
     <ClInclude Include="src\HeightMap.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Mesh.h" />
@@ -54,6 +56,9 @@
     <ProjectReference Include="..\bullet\build3\vs2010\LinearMath.vcxproj">
       <Project>{8a5290dc-24c0-ba4d-83dc-c55ccf5e8f31}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="src\Dump.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{89281764-4192-41E0-B813-DFB62C075125}</ProjectGuid>

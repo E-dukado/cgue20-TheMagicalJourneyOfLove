@@ -18,6 +18,7 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "Model.h"
+#include "Geometry.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -32,7 +33,6 @@
 #include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
 
 using namespace glm;
 
@@ -51,7 +51,6 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void setWindowMode();
 void RenderText(Shader& s, string text, float x, float y, float scale, vec3 color, VAO textVAO, VBO textVBO);
 void displayFPS(float deltaTime);
-
 
 
 /* --------------------------------------------- */
@@ -125,7 +124,6 @@ int main(int argc, char** argv)
 	float zFar = float(reader.GetReal("camera", "far", 500.0f));
 	
 
-
 	//heightmap texture dimensions and half dimensions
 	const int TERRAIN_WIDTH = 1024;
 	const int TERRAIN_DEPTH = 1024;
@@ -141,9 +139,7 @@ int main(int argc, char** argv)
 	/* --------------------------------------------- */
 
 	glfwSetErrorCallback([](int error, const char* description) { std::cout << "GLFW error " << error << ": " << description << std::endl; });
-	if (!glfwInit()) {
-		EXIT_WITH_ERROR("Failed to init GLFW");
-	}
+	if (!glfwInit()) { EXIT_WITH_ERROR("Failed to init GLFW"); }
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // Request OpenGL version 4.5
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -154,32 +150,25 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_SAMPLES, 4);	// Enable antialiasing (4xMSAA)
 
 	// Window Setup
-	const GLFWvidmode* screenStruct;
 	monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* screenStruct;
 	screenStruct = glfwGetVideoMode(monitor);
 	screenWidth = screenStruct->width;
 	screenHeight = screenStruct->height;
 	
 	window = glfwCreateWindow(screenWidth, screenHeight, windowTitle.c_str(), monitor, nullptr);
-	if (!window) {
-		EXIT_WITH_ERROR("Failed to create window");
-	}
-
+	if (!window) { EXIT_WITH_ERROR("Failed to create window"); }
 	glfwMakeContextCurrent(window);	// This function makes the context of the specified window current on the calling thread. 
 
 	glewExperimental = true;
 	GLenum err = glewInit();
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	if (err != GLEW_OK) {
-		EXIT_WITH_ERROR("Failed to init GLEW: " << glewGetErrorString(err));
-	}
+	if (err != GLEW_OK) { EXIT_WITH_ERROR("Failed to init GLEW: " << glewGetErrorString(err)); }
 
 	setWindowMode();
 
 	// Debug callback
-	if (glDebugMessageCallback != NULL) {
-		// Register your callback function.
-
+	if (glDebugMessageCallback != NULL) {// Register your callback function.
 		glDebugMessageCallback(DebugCallbackDefault, NULL);
 		// Enable synchronous callback. This ensures that your callback function is called
 		// right after an error has occurred. This capability is not defined in the AMD
@@ -192,9 +181,7 @@ int main(int argc, char** argv)
 	// Init framework
 	/* --------------------------------------------- */
 
-	if (!initFramework()) {
-		EXIT_WITH_ERROR("Failed to init framework");
-	}
+	if (!initFramework()) { EXIT_WITH_ERROR("Failed to init framework"); }
 
 	// set callbacks
 	glfwSetKeyCallback(window, key_callback);
@@ -206,8 +193,6 @@ int main(int argc, char** argv)
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		//disables mouse cursor icon and sets cursor as input
 	glClearColor(0.7, 0.75, 1.0, 1);
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
@@ -263,7 +248,6 @@ int main(int argc, char** argv)
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
-
 	vec3 cubePositions[] = {
 		glm::vec3(1.0f, -0.5f, 0.0f),
 		glm::vec3(5.0f, 7.0f, 1.0f),
@@ -308,24 +292,14 @@ int main(int argc, char** argv)
 	};
 
 
-	Assimp::Importer importer;
 
-		
-	
-	VAO vao;
-	vao.bind();
-	VBO vbo(cubeVertices, sizeof(cubeVertices));
-	vao.addBuffer(vbo);
-
-
-	
 
 	//------------ lighting -------------------
 
-	//the lamp uses the same VBO as the cubes since it is also a cube
 	VAO lampVAO;
 	lampVAO.bind();
-	lampVAO.addLamp(vbo);
+	VBO lampVbo(cubeVertices, sizeof(cubeVertices));
+	lampVAO.addLamp(lampVbo);
 	
 
 	//------------ /lighting -------------------
@@ -344,14 +318,15 @@ int main(int argc, char** argv)
 
 	VAO woodVAO;
 	woodVAO.bind();
-	woodVAO.addWood(vbo);
+	VBO woodVbo(cubeVertices, sizeof(cubeVertices));
+	woodVAO.addWood(woodVbo);
 	//-----------/Procedural Wood----------
 
 
 	//HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
 
 	Texture tex("assets/textures/testTex2.jpg");
-	//use jpg for heightma
+	//use jpg for heightmap
 	Texture redSunTex("assets/models/sunRed/sun.jpg");
 	Texture blueSunTex("assets/models/sunBlue/sun.jpg");
 
@@ -405,7 +380,11 @@ int main(int argc, char** argv)
 	world->addRigidBody(body);
 	bodies.push_back(body);
 
-	
+	Shader collisionShader("assets/shader/collisionVertex.vert", "assets/shader/collisionFragment.frag");
+	//Geometry testCollisionShape = Geometry(mat4(1.0f),Geometry::createCylinderGeometry(20, 100.0f, 30.0f));
+	//Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createCubeGeometry(100.0f, 100.0f, 100.0f));	
+	Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createSphereGeometry(16,16,30.0f));
+
 	//------------------------Text Rendering---------------------
 	FT_Library ft;																												//init
 	if (FT_Init_FreeType(&ft)) std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;					//init
@@ -415,9 +394,6 @@ int main(int argc, char** argv)
 	FT_Set_Pixel_Sizes(face, 0, 48);										//Font size (width == 0 -> width is dynamically calculated!)
 	
 	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER)) std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;			//Load character "X" for testing init
-
-	
-	
 
 	Shader textShader("assets/shader/textVertex.vert", "assets/shader/textFragment.frag");
 	mat4 textProjection = ortho(0.0f, static_cast<float>(windowWidth), 0.0f, static_cast<float>(windowHeight));
@@ -486,52 +462,24 @@ int main(int argc, char** argv)
 
 			// Clear backbuffer
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			// Poll events
 			glfwPollEvents();
-
 			glDisable(GL_BLEND);
 
 			shader.use();
 			shader.setVec3("viewPos", 1, cam.camPosition);
-			
 			//material properties
 			//ambient and diffuse should be set to similar values as the material/texture color
-			//specular is the shiny part
-			//shininess changes the appearance of the specular light, e.g. 16 -> large reflection, 256 -> small reflection 
-			shader.setVec3("material.specular", 1, glm::vec3(0.6f, 0.6f, 0.6f));
-			shader.setFloat("material.shininess", 32);
-
-
-			//light properties, ambient is set rather low so different objects don't brighten each other up too much
-			//	directional light (white)
+			shader.setVec3("material.specular", 1, glm::vec3(0.6f, 0.6f, 0.6f));  //specular is the shiny part
+			shader.setFloat("material.shininess", 32);	//shininess changes the appearance of the specular light, e.g. 16 -> large reflection, 256 -> small reflection 
 			shader.setVec3("dirLights[0].direction", 1, vec3(0.0f, -1.0f, 0.0f));
-			shader.setVec3("dirLights[0].ambient", 1, glm::vec3(0.03, 0.03f, 0.03f));
+			shader.setVec3("dirLights[0].ambient", 1, glm::vec3(0.03, 0.03f, 0.03f)); //ambient is set rather low so different objects don't brighten each other up too much
 			shader.setVec3("dirLights[0].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f)); 
 			shader.setVec3("dirLights[0].specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
 
-			/*
-			//	point light
-			shader.setVec3("pointLights[0].position", 1, lightPos[0]);
-			shader.setVec3("pointLights[0].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
-			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
-			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 1.0f, 1.0f));
-			shader.setFloat("pointLights[0].constant", 0.6f);
-			shader.setFloat("pointLights[0].linear", 0.009f);
-			shader.setFloat("pointLights[0].quadratic", 0.032f);
-			//	point light2
-			shader.setVec3("pointLights[1].position", 1, lightPos[1]);
-			shader.setVec3("pointLights[1].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
-			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
-			shader.setVec3("pointLights[1].specular", 1, vec3(1.0f, 1.0f, 1.0f));
-			shader.setFloat("pointLights[1].constant", 0.4f);
-			shader.setFloat("pointLights[1].linear", 0.09f);
-			shader.setFloat("pointLights[1].quadratic", 0.32f);
-			*/
 
 			//---------------------SUNS-----------------------------------------
-//Lights
-//	point light
+			//Lights
+			//	point light
 			shader.setVec3("pointLights[0].position", 1, sunPos[0] - vec3(0.0f, 0.0f, 0.0f));
 			shader.setVec3("pointLights[0].ambient", 1, vec3(0.5f, 0.0f, 0.0f));
 			shader.setVec3("pointLights[0].diffuse", 1, vec3(1.0f, 0.2f, 0.2f));
@@ -547,29 +495,25 @@ int main(int argc, char** argv)
 			shader.setFloat("pointLights[1].constant", 0.02f);
 			shader.setFloat("pointLights[1].linear", 0.00006f);
 			shader.setFloat("pointLights[1].quadratic", 0.000022f);
-
 			//	directional light (red)
 			shader.setVec3("dirLights[1].direction", 1, vec3(0.2f, -1.0f, 0.3f));
-			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.7, 0.0f, 0.0f));
-			shader.setVec3("dirLights[1].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.7f, 0.1f, 0.1f));
-
+			shader.setVec3("dirLights[1].ambient", 1, vec3(0.7, 0.0f, 0.0f));
+			shader.setVec3("dirLights[1].diffuse", 1, vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[1].specular", 1, vec3(0.7f, 0.1f, 0.1f));
 			//	directional light (blue)
 			shader.setVec3("dirLights[2].direction", 1, vec3(-0.2f, -1.0f, -0.3f));
-			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.0f, 0.0f, 0.7f));
-			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.1f, 0.1f, 0.7f));
+			shader.setVec3("dirLights[2].ambient", 1, vec3(0.0f, 0.0f, 0.7f));
+			shader.setVec3("dirLights[2].diffuse", 1, vec3(0.5f, 0.5f, 0.5f));
+			shader.setVec3("dirLights[2].specular", 1, vec3(0.1f, 0.1f, 0.7f));
 
 			redSunTex.bind();
-			mat4 redSun = glm::mat4(1.0f);
-			redSun = translate(redSun, sunPos[0]);
+			mat4 redSun = translate(mat4(1.0f), sunPos[0]);
 			redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
 			redSunModel.draw(shader);
 
 			blueSunTex.bind();
-			mat4 blueSun = glm::mat4(1.0f);
-			blueSun = translate(blueSun, sunPos[1]);
+			mat4 blueSun = translate(mat4(1.0f), sunPos[1]);
 			blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, blueSun);
 			blueSunModel.draw(shader);
@@ -586,175 +530,87 @@ int main(int argc, char** argv)
 			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 
 
-			mat4 wizard = glm::mat4(1.0f);
-			wizard = translate(wizard, vec3(-7.0f, -0.2f, 3.0f));
+			/*
+
+			// Models
+			mat4 wizard = translate(mat4(1.0f), vec3(-7.0f, -0.2f, 3.0f));
 			wizard = scale(wizard, vec3(0.005f, 0.005f, 0.005f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, wizard);
 			wizardModel.draw(shader);
 
 			tex.bind();
-			mat4 tree = glm::mat4(1.0f);
-			tree = translate(tree, vec3(0.0f, -0.75f, -3.0f));
+			mat4 tree = translate(mat4(1.0f), vec3(0.0f, -0.75f, -3.0f));
 			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
 			treeModel.draw(shader);
 
 			
-			
-
-
-	
-
-			for (unsigned int i = 0; i < 30; i++)
-			{
-				glm::mat4 treeLoop = glm::mat4(1.0f);
-				treeLoop = glm::scale(treeLoop, glm::vec3(0.05f, 0.05f, 0.05f));
-				treeLoop = glm::translate(treeLoop, vec3(909.0f * sin(i), -15.0f, 410.0f * sin(i*4.2)));
-				treeLoop = glm::rotate(treeLoop, glm::radians(20.0f * (i + 1)), glm::vec3(0, 1.0f, 0.0f));
+			for (unsigned int i = 0; i < 30; i++){
+				mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
+				treeLoop = translate(treeLoop, vec3(909.0f * sin(i), -15.0f, 410.0f * sin(i*4.2)));
+				treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
+				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+				treeModel.draw(shader);
+			}
+			for (unsigned int i = 0; i < 30; i++){
+				mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
+				treeLoop = translate(treeLoop, vec3(1209.0f * sin(i), -15.0f, 1200.0f * sin(i * 2.5)));
+				treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
+				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+				treeModel.draw(shader);
+			}
+			for (unsigned int i = 0; i < 30; i++){
+				mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
+				treeLoop = translate(treeLoop, vec3(1509.0f * sin(i), -15.0f, 2000.0f * sin(i * 6)));
+				treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
 				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
 				treeModel.draw(shader);
 			}
 
-			for (unsigned int i = 0; i < 30; i++)
-			{
-				glm::mat4 treeLoop = glm::mat4(1.0f);
-				treeLoop = glm::scale(treeLoop, glm::vec3(0.05f, 0.05f, 0.05f));
-				treeLoop = glm::translate(treeLoop, vec3(1209.0f * sin(i), -15.0f, 1200.0f * sin(i * 2.5)));
-				treeLoop = glm::rotate(treeLoop, glm::radians(20.0f * (i + 1)), glm::vec3(0, 1.0f, 0.0f));
-				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
-				treeModel.draw(shader);
-			}
-			for (unsigned int i = 0; i < 30; i++)
-			{
-				glm::mat4 treeLoop = glm::mat4(1.0f);
-				treeLoop = glm::scale(treeLoop, glm::vec3(0.05f, 0.05f, 0.05f));
-				treeLoop = glm::translate(treeLoop, vec3(1509.0f * sin(i), -15.0f, 2000.0f * sin(i * 6)));
-				treeLoop = glm::rotate(treeLoop, glm::radians(20.0f * (i + 1)), glm::vec3(0, 1.0f, 0.0f));
-				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
-				treeModel.draw(shader);
-			}
-
-	
-
-			mat4 house = glm::mat4(1.0f);
-			house = translate(house, vec3(-5.0f, -0.75f, -5.0f));
+			mat4 house = translate(mat4(1.0f), vec3(-5.0f, -0.75f, -5.0f));
 			house = scale(house, vec3(0.2f, 0.22, 0.2f));	// it's too big for our scene, so scale it down
 			shader.setMat4("modelMatrix", 1, GL_FALSE, house);
 			houseModel.draw(shader);
 
 
-
-
-	
-
-			tex.bind();
-			vao.bind();
-
-			//model matrix changing over time, that's why it's declared in the game loop currently
-			for (unsigned int i = 0; i < 10; i++)
-			{
-				glm::mat4 squareModel = glm::mat4(1.0f);
-				squareModel = glm::translate(squareModel, cubePositions[i]);
-				squareModel = glm::rotate(squareModel, currentFrame * glm::radians(20.0f * (i+1)), glm::vec3(1.0f, 0.3f, 0.5f));
-				squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
-				shader.setMat4("modelMatrix", 1, GL_FALSE, squareModel);
-
-				//render
-				//glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-	
-			
-
-			
-		/*	//setting up and drawing the white lamp cube
-			lampShader.use();
-			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
-			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-			lampVAO.bind();
-
-			for (unsigned int i = 0; i < 2; i++)
-			{
-				mat4 lampModel = mat4(1.0f);
-				lampModel = translate(lampModel, lightPos[i]);
-				lampModel = glm::scale(lampModel, glm::vec3(0.2f)); // a smaller cube
-				lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}*/
-			
-
-			/*heightmap.bind();
-			terrainShader.use();
-			mat4 terrainModel = mat4(1.0f);
-			terrainModel = translate(terrainModel, glm::vec3(0, 65.0f, 0));
-			terrainShader.setMat4("modelMatrix", 1, GL_FALSE, terrainModel);
-			terrainShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
-			terrainShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-			terrainShader.setInt("heightMapTexture", 0);
-			terrainShader.setInt2("HALF_TERRAIN_SIZE", TERRAIN_WIDTH >> 1, TERRAIN_DEPTH >> 1);
-			terrainShader.setFloat("scale", heightMapScale);
-			terrainShader.setFloat("half_scale", heightMapHalfScale);
-			terrainTex.doubleBind();*/
-			//terrain.drawTerrain();
-			
-			
-			
+			//Procedural Wood
 			//currently cube with wood texture
-			lampShader.use();
-			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
-			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-
 			woodVAO.bind();
 			woodShader.use();
-			mat4 woodModel = mat4(1.0f);
-			woodModel = translate(woodModel, glm::vec3(1,1,1));
-			woodModel = scale(woodModel, glm::vec3(10.0, 10.0, 10.0));
+			mat4 woodModel = translate(mat4(1.0f), vec3(1,1,1));
+			woodModel = scale(woodModel, vec3(10.0, 10.0, 10.0));
 			woodShader.setMat4("modelMatrix", 1, GL_FALSE, woodModel);
 			woodShader.setFloat("frequency", 4);
 			woodShader.setFloat("noiseScale", 8);
 			woodShader.setFloat("ringScale", 0.6);
 			woodShader.setFloat("contrast", 4);
 			woodShader.setFloat("time", deltaTime);
-			woodShader.setVec3("color1", 1, glm::vec3(0.1, 0.08, 0.04));
-			woodShader.setVec3("color2", 1, glm::vec3(0.2, 0.1, 0.0));
+			woodShader.setVec3("color1", 1, vec3(0.1, 0.08, 0.04));
+			woodShader.setVec3("color2", 1, vec3(0.2, 0.1, 0.0));
 		 	glDrawArrays(GL_TRIANGLES, 0, 36);	
-
+			*/
 			
-
+			//Terrain
 			shader.use();
-
-			shader.setVec3("pointLights[0].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
-			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.2f, 0.2f, 0.62));
-			shader.setVec3("pointLights[0].specular", 1, vec3(0.1f, 0.1f, 0.1f));
-			
-
-			//	point light2
-			shader.setVec3("pointLights[1].ambient", 1, vec3(0.3f, 0.3f, 0.4f));
-			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.2f, 0.2f, 2.0f));
-			shader.setVec3("pointLights[1].specular", 1, vec3(0.2f, 0.2f, 2.0f));
-
-
-			//	directional light (red)
-			shader.setVec3("dirLights[1].ambient", 1, glm::vec3(0.2, 0.2f, 0.2f));
-			shader.setVec3("dirLights[1].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[1].specular", 1, glm::vec3(0.2f, 0.1f, 0.1f));
-
-			//	directional light (blue)
-			shader.setVec3("dirLights[2].ambient", 1, glm::vec3(0.0f, 0.0f, 0.1f));
-			shader.setVec3("dirLights[2].diffuse", 1, glm::vec3(0.2f, 0.2f, 0.2f));
-			shader.setVec3("dirLights[2].specular", 1, glm::vec3(0.1f, 0.1f, 0.1f));
-
-			
-			mat4 terrainC = glm::mat4(1.0f);
-			terrainC = scale(terrainC, vec3(3.0f, 3.0f, 3.0f));
+			mat4 terrainC = scale(mat4(1.0f), vec3(3.0f, 3.0f, 3.0f));
 			terrainC = translate(terrainC, vec3(0.0f, 45.0f, 0.0f));
 			shader.setMat4("modelMatrix", 1, GL_FALSE, terrainC);
 			terrainModelC.draw(shader);
-			
-			
+
 			glEnable(GL_BLEND);
-			glBlendEquation(GL_FUNC_ADD);
-			glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
+			mat4 collisionShapeModel = translate(mat4(1.0f), vec3(0.0f, 100.0f, 20.0f));
+			collisionShader.use();
+			collisionShader.setMat4("modelMatrix", 1, GL_FALSE, collisionShapeModel);
+			collisionShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			collisionShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			testCollisionShape.draw();
+			
+			
+			
+			//Brightness Overlay
+			glEnable(GL_BLEND);
+			//glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			//glBlendFunc(GL_SRC_ALPHA, GL_SRC_COLOR);
 			quadShader.use();
 			quadVAO.bind();
@@ -765,14 +621,17 @@ int main(int argc, char** argv)
 			//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
 			glDrawArrays(GL_TRIANGLES, 0, 18);
 			
-			
+		
 
 			//-------------------------FPS Text Rendering-----------------------------
 			//displayFPS(deltaTime);
-			//RenderText(shader, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f), textVAO, textVBO);
+			//RenderText(shader, "This is sample text", 25.0f, 25.0f, 1.0f, vec3(0.5, 0.8f, 0.2f), textVAO, textVBO);
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			
 			// activate corresponding render state	
-			vec3 textColor = vec3(0.5, 0.8f, 0.2f);
+			vec3 textColor = vec3(0.05f, 0.05f, 0.05f);
 			string text = "Frame rate: " + to_string(1.0f / deltaTime);
 			float textX = 25.0f;
 			float textY = 25.0f;
@@ -806,17 +665,19 @@ int main(int argc, char** argv)
 				};
 				// render glyph texture over quad
 				glBindTexture(GL_TEXTURE_2D, ch.textureID);
-				// update content of VBO memory
-				textVBO.bind();
+				textVBO.bind(); // update content of VBO memory
 				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 				textVBO.unbind();
-				// render quad
-				glDrawArrays(GL_TRIANGLES, 0, 6);
+				glDrawArrays(GL_TRIANGLES, 0, 6); // render quad
 				// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
 				textX += (ch.advance >> 6) * textScale; // bitshift by 6 to get value in pixels (2^6 = 64)
 			}
 			glBindVertexArray(0);
 			glBindTexture(GL_TEXTURE_2D, 0);
+
+
+			
+
 
 			
 			//Physics

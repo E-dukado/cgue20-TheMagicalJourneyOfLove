@@ -1,0 +1,80 @@
+			
+			//additional light parameters (were above terrain)
+			/*
+			//	point light
+			shader.setVec3("pointLights[0].position", 1, lightPos[0]);
+			shader.setVec3("pointLights[0].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
+			shader.setVec3("pointLights[0].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
+			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setFloat("pointLights[0].constant", 0.6f);
+			shader.setFloat("pointLights[0].linear", 0.009f);
+			shader.setFloat("pointLights[0].quadratic", 0.032f);
+			//	point light2
+			shader.setVec3("pointLights[1].position", 1, lightPos[1]);
+			shader.setVec3("pointLights[1].ambient", 1, vec3(0.2f, 0.2f, 0.2f));
+			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.8f, 0.8f, 0.8f));
+			shader.setVec3("pointLights[1].specular", 1, vec3(1.0f, 1.0f, 1.0f));
+			shader.setFloat("pointLights[1].constant", 0.4f);
+			shader.setFloat("pointLights[1].linear", 0.09f);
+			shader.setFloat("pointLights[1].quadratic", 0.32f);
+			*/
+
+
+			//turning cubes in space
+			//model matrix changing over time, that's why it's declared in the game loop currently
+			for (unsigned int i = 0; i < 10; i++)
+			{
+				glm::mat4 squareModel = glm::mat4(1.0f);
+				squareModel = glm::translate(squareModel, cubePositions[i]);
+				squareModel = glm::rotate(squareModel, currentFrame * glm::radians(20.0f * (i+1)), glm::vec3(1.0f, 0.3f, 0.5f));
+				squareModel = glm::scale(squareModel, glm::vec3(1.5, 0.5, 1.0));
+				shader.setMat4("modelMatrix", 1, GL_FALSE, squareModel);
+
+				//render
+				//glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+
+
+			//heightmap terrain
+			/*
+			heightmap.bind();
+			terrainShader.use();
+			mat4 terrainModel = mat4(1.0f);
+			terrainModel = translate(terrainModel, glm::vec3(0, 65.0f, 0));
+			terrainShader.setMat4("modelMatrix", 1, GL_FALSE, terrainModel);
+			terrainShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			terrainShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			terrainShader.setInt("heightMapTexture", 0);
+			terrainShader.setInt2("HALF_TERRAIN_SIZE", TERRAIN_WIDTH >> 1, TERRAIN_DEPTH >> 1);
+			terrainShader.setFloat("scale", heightMapScale);
+			terrainShader.setFloat("half_scale", heightMapHalfScale);
+			terrainTex.doubleBind();
+			//terrain.drawTerrain();
+			
+			*/
+			
+
+			
+			//random two lamps in space
+			//setting up and drawing the white lamp cube
+			lampShader.use();
+			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			lampVAO.bind();
+
+			for (unsigned int i = 0; i < 2; i++)
+			{
+				mat4 lampModel = mat4(1.0f);
+				lampModel = translate(lampModel, lightPos[i]);
+				lampModel = glm::scale(lampModel, glm::vec3(0.2f)); // a smaller cube
+				lampShader.setMat4("modelMatrix", 1, GL_FALSE, lampModel);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			
+
+
+			//was above procedural wood
+			lampShader.use();
+			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
