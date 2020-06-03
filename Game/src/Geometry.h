@@ -41,6 +41,7 @@ public:
 
 	void resetModelMatrix();
 
+	static GeometryData createPlaneGeometry(float width, float depth);
 
 	static GeometryData createCubeGeometry(float width, float height, float depth);
 

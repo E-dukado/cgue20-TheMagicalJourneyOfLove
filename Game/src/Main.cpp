@@ -357,7 +357,6 @@ int main(int argc, char** argv)
 	Model blueSunModel("assets/models/sunBlue/sunBlue.obj");
 	Model terrainModelC("assets/models/Terrain/terrain.obj");
 
-
 	//Terrain terrain;
 	//terrain.generateTerrain();
 
@@ -382,7 +381,8 @@ int main(int argc, char** argv)
 	bodies.push_back(body);
 
 	Shader collisionShader("assets/shader/collisionVertex.vert", "assets/shader/collisionFragment.frag");
-	Geometry testCollisionShape = Geometry(mat4(1.0f),Geometry::createCylinderGeometry(20, 100.0f, 30.0f));
+	Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createPlaneGeometry(100.0f, 100.0f));
+	//Geometry testCollisionShape = Geometry(mat4(1.0f),Geometry::createCylinderGeometry(20, 100.0f, 30.0f));
 	//Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createCubeGeometry(100.0f, 100.0f, 100.0f));	
 	//Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createSphereGeometry(16,16,30.0f));
 
@@ -861,6 +861,7 @@ void RenderText(Shader& shader, string text, float x, float y, float scale, vec3
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
 
 
 void displayFPS(float deltaTime) {

@@ -50,6 +50,29 @@ void Geometry::resetModelMatrix()
 	_modelMatrix = mat4(1.0f);
 }
 
+GeometryData Geometry::createPlaneGeometry(float width, float depth)
+{
+	GeometryData data;
+
+	data.positions = {
+		// front
+		vec3(-width / 2.0f, 0.0f,  -depth / 2.0f),
+		vec3(width / 2.0f, 0.0f,  -depth / 2.0f),
+		vec3(width / 2.0f, 0.0f,  depth / 2.0f),
+		vec3(-width / 2.0f, 0.0f,  depth / 2.0f)
+	};
+
+
+	data.indices = {		//Triangles rendered in both ways so the plane is visible from both sides when backface culling is enabled
+		0, 1, 2,
+		2, 3, 0,
+		0, 2, 1,
+		2, 0, 3
+	};
+
+	return move(data);
+}
+
 GeometryData Geometry::createCubeGeometry(float width, float height, float depth)
 {
 	GeometryData data;
