@@ -632,7 +632,7 @@ int main(int argc, char** argv)
 			
 			// activate corresponding render state	
 			vec3 textColor = vec3(0.05f, 0.05f, 0.05f);
-			string text = "Frame rate: " + to_string(roundf(1.0f / deltaTime ));
+			string text = "Frame rate: " + to_string(1.0f / deltaTime ).substr(0, 4) + "fps";
 			float textX = 25.0f;
 			float textY = 25.0f;
 			float textScale = 1.0f;
