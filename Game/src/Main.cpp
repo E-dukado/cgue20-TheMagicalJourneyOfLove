@@ -69,6 +69,7 @@ float aspectRatio = 0.0f;
 string windowTitle;
 GLFWwindow* window;
 GLFWmonitor* monitor;
+float brightnessOffset = 0.0f;
 
 //frame time
 float deltaTime = 0.0f, lastFrame = 0.0f;
@@ -381,9 +382,9 @@ int main(int argc, char** argv)
 	bodies.push_back(body);
 
 	Shader collisionShader("assets/shader/collisionVertex.vert", "assets/shader/collisionFragment.frag");
-	//Geometry testCollisionShape = Geometry(mat4(1.0f),Geometry::createCylinderGeometry(20, 100.0f, 30.0f));
+	Geometry testCollisionShape = Geometry(mat4(1.0f),Geometry::createCylinderGeometry(20, 100.0f, 30.0f));
 	//Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createCubeGeometry(100.0f, 100.0f, 100.0f));	
-	Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createSphereGeometry(16,16,30.0f));
+	//Geometry testCollisionShape = Geometry(mat4(1.0f), Geometry::createSphereGeometry(16,16,30.0f));
 
 	//------------------------Text Rendering---------------------
 	FT_Library ft;																												//init
@@ -614,8 +615,7 @@ int main(int argc, char** argv)
 			//glBlendFunc(GL_SRC_ALPHA, GL_SRC_COLOR);
 			quadShader.use();
 			quadVAO.bind();
-			//quadShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
-			//quadShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			quadShader.setFloat("alpha", brightnessOffset);
 			mat4 quadModel = mat4(1.0f);
 			quadModel = scale(quadModel, vec3(10.0, 10.0, 10.0));
 			//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
@@ -632,7 +632,7 @@ int main(int argc, char** argv)
 			
 			// activate corresponding render state	
 			vec3 textColor = vec3(0.05f, 0.05f, 0.05f);
-			string text = "Frame rate: " + to_string(1.0f / deltaTime);
+			string text = "Frame rate: " + to_string(roundf(1.0f / deltaTime ));
 			float textX = 25.0f;
 			float textY = 25.0f;
 			float textScale = 1.0f;
@@ -786,6 +786,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	case GLFW_KEY_F5:						//Fullscreen Toggle					F5
 		_fullscreen = !_fullscreen;
 		setWindowMode();
+		break;
+
+	case GLFW_KEY_F7:						//Brightness - 						F7
+		brightnessOffset -= 0.05;
+		if (brightnessOffset < 0) brightnessOffset = 0.0f;
+		break;
+
+	case GLFW_KEY_F8:						//Brightness + 						F8
+		brightnessOffset += 0.05;
+		if (brightnessOffset > 0.5f) brightnessOffset = 0.5f;
 		break;
 	}
 }
