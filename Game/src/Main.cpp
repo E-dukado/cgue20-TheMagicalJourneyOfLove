@@ -49,8 +49,16 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void setWindowMode();
-void RenderText(Shader& s, string text, float x, float y, float scale, vec3 color, VAO textVAO, VBO textVBO);
-void displayFPS(float deltaTime);
+void updateFrameTime();
+void updateShaderMatrices(Shader& shader, Shader& collisionShader);
+void setGeneralLight(Shader& shader);
+void renderText(string text, Shader& textShader, VAO& textVAO, VBO& textVBO, float x, float y, float scale, vec3 textColor);
+void renderTerrain(Shader& shader, Model& terrainModel);
+void renderModel(Model& model, Shader& shader, vec3 translation, vec3 scaling, float rotationAngle, vec3 rotationAxis);
+void renderCollisionShape(Geometry& collisionShape, Shader& collisionShader, vec3 translation, vec3 scaling, float rotationAngle, vec3 rotationAxis);
+void renderSuns(Shader& shader, vec3 sunPos[], Texture& redSunTex, Texture& blueSunTex, Model& redSunModel, Model& blueSunModel);
+void renderTrees(Shader& shader, Model& treeModel);
+void renderBrightnessOverlay(Shader& quadShader, VAO& quadVAO);
 
 
 /* --------------------------------------------- */
@@ -65,14 +73,15 @@ static bool _fullscreen = false;
 
 //Screen/Window
 int screenWidth, screenHeight, windowWidth, windowHeight, refreshRate = 0;
-float aspectRatio = 0.0f;
+float aspectRatio = 0.0f, zNear = 0.0f, zFar = 0.0f;
 string windowTitle;
 GLFWwindow* window;
 GLFWmonitor* monitor;
 float brightnessOffset = 0.0f;
 
 //frame time
-float deltaTime = 0.0f, lastFrame = 0.0f;
+float deltaTime = 0.0f, lastFrame = 0.0f, currentFrame = 0.0f;
+string fpsString = "";
 
 //mouse cursor
 bool firstMouse = true;
@@ -121,8 +130,8 @@ int main(int argc, char** argv)
 
 	//camera
 	//float fovy = float(reader.GetReal("camera", "fovy", 60.0f));
-	float zNear = float(reader.GetReal("camera", "near", 0.1f));
-	float zFar = float(reader.GetReal("camera", "far", 500.0f));
+	zNear = float(reader.GetReal("camera", "near", 0.1f));
+	zFar = float(reader.GetReal("camera", "far", 500.0f));
 	
 
 	//heightmap texture dimensions and half dimensions
@@ -323,11 +332,6 @@ int main(int argc, char** argv)
 	woodVAO.addWood(woodVbo);
 	//-----------/Procedural Wood----------
 
-
-	//HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
-
-	Texture tex("assets/textures/testTex2.jpg");
-	//use jpg for heightmap
 	Texture redSunTex("assets/models/sunRed/sun.jpg");
 	Texture blueSunTex("assets/models/sunBlue/sun.jpg");
 
@@ -448,248 +452,39 @@ int main(int argc, char** argv)
 
 
 #pragma endregion
-
 	/* --------------------------------------------- */
 	// Initialize scene and render loop
 	/* --------------------------------------------- */
-
 	{
 		while (!glfwWindowShouldClose(window)) {
-			//Frame time calculation
-			float currentFrame = (float)glfwGetTime();
-			deltaTime = currentFrame - lastFrame;
-			lastFrame = currentFrame;
-			
-
 			// Clear backbuffer
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glfwPollEvents();
 			glDisable(GL_BLEND);
 
-			shader.use();
-			shader.setVec3("viewPos", 1, cam.camPosition);
-			//material properties
-			//ambient and diffuse should be set to similar values as the material/texture color
-			shader.setVec3("material.specular", 1, glm::vec3(0.6f, 0.6f, 0.6f));  //specular is the shiny part
-			shader.setFloat("material.shininess", 32);	//shininess changes the appearance of the specular light, e.g. 16 -> large reflection, 256 -> small reflection 
-			shader.setVec3("dirLights[0].direction", 1, vec3(0.0f, -1.0f, 0.0f));
-			shader.setVec3("dirLights[0].ambient", 1, glm::vec3(0.03, 0.03f, 0.03f)); //ambient is set rather low so different objects don't brighten each other up too much
-			shader.setVec3("dirLights[0].diffuse", 1, glm::vec3(0.5f, 0.5f, 0.5f)); 
-			shader.setVec3("dirLights[0].specular", 1, glm::vec3(0.5f, 0.5f, 0.5f));
-
-
-			//---------------------SUNS-----------------------------------------
-			//Lights
-			//	point light
-			shader.setVec3("pointLights[0].position", 1, sunPos[0] - vec3(0.0f, 0.0f, 0.0f));
-			shader.setVec3("pointLights[0].ambient", 1, vec3(0.5f, 0.0f, 0.0f));
-			shader.setVec3("pointLights[0].diffuse", 1, vec3(1.0f, 0.2f, 0.2f));
-			shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 0.2f, 0.2f));
-			shader.setFloat("pointLights[0].constant", 0.01f);
-			shader.setFloat("pointLights[0].linear", 0.0009f);
-			shader.setFloat("pointLights[0].quadratic", 0.000032f);
-			//	point light2
-			shader.setVec3("pointLights[1].position", 1, sunPos[1]);
-			shader.setVec3("pointLights[1].ambient", 1, vec3(0.0f, 0.0f, 0.5f));
-			shader.setVec3("pointLights[1].diffuse", 1, vec3(0.2f, 0.2f, 1.0f));
-			shader.setVec3("pointLights[1].specular", 1, vec3(0.2f, 0.2f, 1.0f));
-			shader.setFloat("pointLights[1].constant", 0.02f);
-			shader.setFloat("pointLights[1].linear", 0.00006f);
-			shader.setFloat("pointLights[1].quadratic", 0.000022f);
-			//	directional light (red)
-			shader.setVec3("dirLights[1].direction", 1, vec3(0.2f, -1.0f, 0.3f));
-			shader.setVec3("dirLights[1].ambient", 1, vec3(0.7, 0.0f, 0.0f));
-			shader.setVec3("dirLights[1].diffuse", 1, vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[1].specular", 1, vec3(0.7f, 0.1f, 0.1f));
-			//	directional light (blue)
-			shader.setVec3("dirLights[2].direction", 1, vec3(-0.2f, -1.0f, -0.3f));
-			shader.setVec3("dirLights[2].ambient", 1, vec3(0.0f, 0.0f, 0.7f));
-			shader.setVec3("dirLights[2].diffuse", 1, vec3(0.5f, 0.5f, 0.5f));
-			shader.setVec3("dirLights[2].specular", 1, vec3(0.1f, 0.1f, 0.7f));
-
-			redSunTex.bind();
-			mat4 redSun = translate(mat4(1.0f), sunPos[0]);
-			redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
-			redSunModel.draw(shader);
-
-			blueSunTex.bind();
-			mat4 blueSun = translate(mat4(1.0f), sunPos[1]);
-			blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, blueSun);
-			blueSunModel.draw(shader);
-
-			
-
-
-			// Update camera
-			mat4 projectionMatrix = mat4(1.0f);
+			// Camera & Lighting
 			processInput(window);
-			mat4 viewMatrix = cam.getViewMatrix();
-			projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
-			shader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-			shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
-
-
-			/*
-
-			// Models
-			mat4 wizard = translate(mat4(1.0f), vec3(-7.0f, -0.2f, 3.0f));
-			wizard = scale(wizard, vec3(0.005f, 0.005f, 0.005f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, wizard);
-			wizardModel.draw(shader);
-
-			tex.bind();
-			mat4 tree = translate(mat4(1.0f), vec3(0.0f, -0.75f, -3.0f));
-			tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
-			treeModel.draw(shader);
-
+			updateFrameTime();
+			updateShaderMatrices(shader, collisionShader);
+			setGeneralLight(shader);
 			
-			for (unsigned int i = 0; i < 30; i++){
-				mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
-				treeLoop = translate(treeLoop, vec3(909.0f * sin(i), -15.0f, 410.0f * sin(i*4.2)));
-				treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
-				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
-				treeModel.draw(shader);
-			}
-			for (unsigned int i = 0; i < 30; i++){
-				mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
-				treeLoop = translate(treeLoop, vec3(1209.0f * sin(i), -15.0f, 1200.0f * sin(i * 2.5)));
-				treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
-				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
-				treeModel.draw(shader);
-			}
-			for (unsigned int i = 0; i < 30; i++){
-				mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
-				treeLoop = translate(treeLoop, vec3(1509.0f * sin(i), -15.0f, 2000.0f * sin(i * 6)));
-				treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
-				shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
-				treeModel.draw(shader);
-			}
+			//Render Objects
+			renderTerrain(shader, terrainModelC);
+			renderSuns(shader, sunPos, redSunTex, blueSunTex, redSunModel, blueSunModel);
+			renderModel(wizardModel, shader, vec3(-7.0f, -0.2f, 3.0f), vec3(0.005f, 0.005f, 0.005f), 0.0f, vec3(1.0f));
+			renderModel(houseModel, shader, vec3(-5.0f, -0.75f, -5.0f), vec3(0.2f, 0.22, 0.2f), 0.0f, vec3(1.0f));
+			renderTrees(shader, treeModel);			
+			renderCollisionShape(testCollisionShape, collisionShader, vec3(0.0f, 100.0f, 20.0f), vec3(1.0f), 0.0f, vec3(1.0f));
 
-			mat4 house = translate(mat4(1.0f), vec3(-5.0f, -0.75f, -5.0f));
-			house = scale(house, vec3(0.2f, 0.22, 0.2f));	// it's too big for our scene, so scale it down
-			shader.setMat4("modelMatrix", 1, GL_FALSE, house);
-			houseModel.draw(shader);
-
-
-			//Procedural Wood
-			//currently cube with wood texture
-			woodVAO.bind();
-			woodShader.use();
-			mat4 woodModel = translate(mat4(1.0f), vec3(1,1,1));
-			woodModel = scale(woodModel, vec3(10.0, 10.0, 10.0));
-			woodShader.setMat4("modelMatrix", 1, GL_FALSE, woodModel);
-			woodShader.setFloat("frequency", 4);
-			woodShader.setFloat("noiseScale", 8);
-			woodShader.setFloat("ringScale", 0.6);
-			woodShader.setFloat("contrast", 4);
-			woodShader.setFloat("time", deltaTime);
-			woodShader.setVec3("color1", 1, vec3(0.1, 0.08, 0.04));
-			woodShader.setVec3("color2", 1, vec3(0.2, 0.1, 0.0));
-		 	glDrawArrays(GL_TRIANGLES, 0, 36);	
-			*/
-			
-			//Terrain
-			shader.use();
-			mat4 terrainC = scale(mat4(1.0f), vec3(3.0f, 3.0f, 3.0f));
-			terrainC = translate(terrainC, vec3(0.0f, 45.0f, 0.0f));
-			shader.setMat4("modelMatrix", 1, GL_FALSE, terrainC);
-			terrainModelC.draw(shader);
-
-			glEnable(GL_BLEND);
-			mat4 collisionShapeModel = translate(mat4(1.0f), vec3(0.0f, 100.0f, 20.0f));
-			collisionShader.use();
-			collisionShader.setMat4("modelMatrix", 1, GL_FALSE, collisionShapeModel);
-			collisionShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
-			collisionShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
-			testCollisionShape.draw();
-			
-			
-			
-			//Brightness Overlay
-			glEnable(GL_BLEND);
-			//glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			//glBlendFunc(GL_SRC_ALPHA, GL_SRC_COLOR);
-			quadShader.use();
-			quadVAO.bind();
-			quadShader.setFloat("alpha", brightnessOffset);
-			mat4 quadModel = mat4(1.0f);
-			quadModel = scale(quadModel, vec3(10.0, 10.0, 10.0));
-			//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
-			glDrawArrays(GL_TRIANGLES, 0, 18);
-			
-		
-
-			//-------------------------FPS Text Rendering-----------------------------
-			//displayFPS(deltaTime);
-			//RenderText(shader, "This is sample text", 25.0f, 25.0f, 1.0f, vec3(0.5, 0.8f, 0.2f), textVAO, textVBO);
-
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			
-			// activate corresponding render state	
-			vec3 textColor = vec3(0.05f, 0.05f, 0.05f);
-			string text = "Frame rate: " + to_string(1.0f / deltaTime ).substr(0, 4) + "fps";
-			float textX = 25.0f;
-			float textY = 25.0f;
-			float textScale = 1.0f;
-
-			textShader.use();
-			textShader.setVec3("textColor", 1, textColor);
-			glActiveTexture(GL_TEXTURE0);
-			textVAO.bind();
-
-			// iterate through all characters
-			string::const_iterator c;
-			for (c = text.begin(); c != text.end(); c++)
-			{
-				Character ch = Characters[*c];
-
-				float xpos = textX + ch.bearing.x * textScale;
-				float ypos = textY - (ch.size.y - ch.bearing.y) * textScale;
-
-				float w = ch.size.x * textScale;
-				float h = ch.size.y * textScale;
-				// update VBO for each character
-				float vertices[6][4] = {
-					{ xpos,     ypos + h,   0.0f, 0.0f },
-					{ xpos,     ypos,       0.0f, 1.0f },
-					{ xpos + w, ypos,       1.0f, 1.0f },
-
-					{ xpos,     ypos + h,   0.0f, 0.0f },
-					{ xpos + w, ypos,       1.0f, 1.0f },
-					{ xpos + w, ypos + h,   1.0f, 0.0f }
-				};
-				// render glyph texture over quad
-				glBindTexture(GL_TEXTURE_2D, ch.textureID);
-				textVBO.bind(); // update content of VBO memory
-				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-				textVBO.unbind();
-				glDrawArrays(GL_TRIANGLES, 0, 6); // render quad
-				// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-				textX += (ch.advance >> 6) * textScale; // bitshift by 6 to get value in pixels (2^6 = 64)
-			}
-			glBindVertexArray(0);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-
-			
-
-
-			
+			renderBrightnessOverlay(quadShader, quadVAO);
+			renderText(fpsString, textShader, textVAO, textVBO, 25.0f, 25.0f, 1.0f, vec3(0.05f, 0.05f, 0.05f));
 			//Physics
 			world->stepSimulation(deltaTime);
 
-		
 			// Swap buffers
 			glfwSwapBuffers(window);
 		}
 	}
-
-
 
 
 	/* --------------------------------------------- */
@@ -707,17 +502,15 @@ int main(int argc, char** argv)
 	// Destroy context and exit
 	/* --------------------------------------------- */
 	glfwTerminate();
-
 	return EXIT_SUCCESS;
 }
 
 
-
+//------------------------Controls & Callbacks---------------------------
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 {
 	cam.processMouseScroll(yOffset);
 }
-
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -734,7 +527,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		_strafing = false;
 	}
 }
-
 
 void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 	if (firstMouse)				//check if it's the first cursor input to prevent perspective jump
@@ -755,7 +547,6 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
 
 	//cam.processMouseMovement(xOffset, yOffset);
 }
-
 
 void processInput(GLFWwindow* window) {
 	//float cameraSpeed = 4.5f * deltaTime;
@@ -818,11 +609,47 @@ void setWindowMode() {
 	}
 }
 
-void RenderText(Shader& shader, string text, float x, float y, float scale, vec3 color, VAO textVAO, VBO textVBO)
-{
-	// activate corresponding render state	
+void updateShaderMatrices(Shader& shader, Shader& collisionShader) {
+	mat4 viewMatrix = cam.getViewMatrix();
+	mat4 projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
 	shader.use();
-	shader.setVec3("textColor", 1, color);
+	shader.setVec3("viewPos", 1, cam.camPosition);
+	shader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+	shader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	collisionShader.use();
+	collisionShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+	collisionShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+}
+
+void updateFrameTime() {
+	//Frame time calculation
+	currentFrame = (float)glfwGetTime();
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+	fpsString = "Frame rate: " + to_string(1.0f / deltaTime).substr(0, 4) + "fps";
+}
+
+
+//------------------------Rendering functions---------------------------
+void setGeneralLight(Shader& shader) {
+	shader.use();
+	//material properties
+	//ambient and diffuse should be set to similar values as the material/texture color
+	shader.setVec3("material.specular", 1, glm::vec3(0.6f, 0.6f, 0.6f));  //specular is the shiny part
+	shader.setFloat("material.shininess", 32);	//shininess changes the appearance of the specular light, e.g. 16 -> large reflection, 256 -> small reflection 
+	shader.setVec3("dirLights[0].direction", 1, vec3(0.0f, -1.0f, 0.0f));
+	shader.setVec3("dirLights[0].ambient", 1, vec3(0.03, 0.03f, 0.03f)); //ambient is set rather low so different objects don't brighten each other up too much
+	shader.setVec3("dirLights[0].diffuse", 1, vec3(0.5f, 0.5f, 0.5f));
+	shader.setVec3("dirLights[0].specular", 1, vec3(0.5f, 0.5f, 0.5f));
+}
+
+void renderText(string text, Shader& textShader, VAO& textVAO, VBO& textVBO, float x, float y, float scale, vec3 textColor)
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	textShader.use();
+	textShader.setVec3("textColor", 1, textColor);
 	glActiveTexture(GL_TEXTURE0);
 	textVAO.bind();
 
@@ -849,12 +676,10 @@ void RenderText(Shader& shader, string text, float x, float y, float scale, vec3
 		};
 		// render glyph texture over quad
 		glBindTexture(GL_TEXTURE_2D, ch.textureID);
-		// update content of VBO memory
-		textVBO.bind();
+		textVBO.bind(); // update content of VBO memory
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		textVBO.unbind();
-		// render quad
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLES, 0, 6); // render quad
 		// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
 		x += (ch.advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
 	}
@@ -862,20 +687,127 @@ void RenderText(Shader& shader, string text, float x, float y, float scale, vec3
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
-
-void displayFPS(float deltaTime) {
-	cout << "Frame rate: " << 1.0f / deltaTime << endl;
+void renderTerrain(Shader& shader, Model& terrainModel) {
+	shader.use();
+	mat4 terrainC = scale(mat4(1.0f), vec3(3.0f, 3.0f, 3.0f));
+	terrainC = translate(terrainC, vec3(0.0f, 45.0f, 0.0f));
+	shader.setMat4("modelMatrix", 1, GL_FALSE, terrainC);
+	terrainModel.draw(shader);
 }
 
-#pragma region debug
+void renderModel(Model& model, Shader& shader, vec3 translation, vec3 scaling, float rotationAngle, vec3 rotationAxis) {
+	mat4 modelMat = translate(mat4(1.0f), translation);
+	modelMat = scale(modelMat, scaling);
+	modelMat = rotate(modelMat, radians(rotationAngle), rotationAxis);
+	shader.use();
+	shader.setMat4("modelMatrix", 1, GL_FALSE, modelMat);
+	model.draw(shader);
+}
 
+void renderSuns(Shader& shader, vec3 sunPos[], Texture& redSunTex, Texture& blueSunTex, Model& redSunModel, Model& blueSunModel) {
+	//---------------------SUNS-----------------------------------------
+	//	point light
+	shader.use();
+	shader.setVec3("pointLights[0].position", 1, sunPos[0] - vec3(0.0f, 0.0f, 0.0f));
+	shader.setVec3("pointLights[0].ambient", 1, vec3(0.5f, 0.0f, 0.0f));
+	shader.setVec3("pointLights[0].diffuse", 1, vec3(1.0f, 0.2f, 0.2f));
+	shader.setVec3("pointLights[0].specular", 1, vec3(1.0f, 0.2f, 0.2f));
+	shader.setFloat("pointLights[0].constant", 0.01f);
+	shader.setFloat("pointLights[0].linear", 0.0009f);
+	shader.setFloat("pointLights[0].quadratic", 0.000032f);
+	//	point light2
+	shader.setVec3("pointLights[1].position", 1, sunPos[1]);
+	shader.setVec3("pointLights[1].ambient", 1, vec3(0.0f, 0.0f, 0.5f));
+	shader.setVec3("pointLights[1].diffuse", 1, vec3(0.2f, 0.2f, 1.0f));
+	shader.setVec3("pointLights[1].specular", 1, vec3(0.2f, 0.2f, 1.0f));
+	shader.setFloat("pointLights[1].constant", 0.02f);
+	shader.setFloat("pointLights[1].linear", 0.00006f);
+	shader.setFloat("pointLights[1].quadratic", 0.000022f);
+	//	directional light (red)
+	shader.setVec3("dirLights[1].direction", 1, vec3(0.2f, -1.0f, 0.3f));
+	shader.setVec3("dirLights[1].ambient", 1, vec3(0.7, 0.0f, 0.0f));
+	shader.setVec3("dirLights[1].diffuse", 1, vec3(0.5f, 0.5f, 0.5f));
+	shader.setVec3("dirLights[1].specular", 1, vec3(0.7f, 0.1f, 0.1f));
+	//	directional light (blue)
+	shader.setVec3("dirLights[2].direction", 1, vec3(-0.2f, -1.0f, -0.3f));
+	shader.setVec3("dirLights[2].ambient", 1, vec3(0.0f, 0.0f, 0.7f));
+	shader.setVec3("dirLights[2].diffuse", 1, vec3(0.5f, 0.5f, 0.5f));
+	shader.setVec3("dirLights[2].specular", 1, vec3(0.1f, 0.1f, 0.7f));
+
+	redSunTex.bind();
+	mat4 redSun = translate(mat4(1.0f), sunPos[0]);
+	redSun = scale(redSun, vec3(0.2f, 0.2f, 0.2f));	// it's too big for our scene, so scale it down
+	shader.setMat4("modelMatrix", 1, GL_FALSE, redSun);
+	redSunModel.draw(shader);
+
+	blueSunTex.bind();
+	mat4 blueSun = translate(mat4(1.0f), sunPos[1]);
+	blueSun = scale(blueSun, vec3(0.3f, 0.3f, 0.3f));	// it's too big for our scene, so scale it down
+	shader.setMat4("modelMatrix", 1, GL_FALSE, blueSun);
+	blueSunModel.draw(shader);
+}
+
+void renderTrees(Shader& shader, Model& treeModel) {
+	shader.use();
+	mat4 tree = translate(mat4(1.0f), vec3(0.0f, -0.75f, -3.0f));
+	tree = scale(tree, vec3(0.05f, 0.05f, 0.05f));	// it's too big for our scene, so scale it down
+	shader.setMat4("modelMatrix", 1, GL_FALSE, tree);
+	treeModel.draw(shader);
+
+
+	for (unsigned int i = 0; i < 30; i++) {
+		mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
+		treeLoop = translate(treeLoop, vec3(909.0f * sin(i), -15.0f, 410.0f * sin(i * 4.2)));
+		treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
+		shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+		treeModel.draw(shader);
+	}
+	for (unsigned int i = 0; i < 30; i++) {
+		mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
+		treeLoop = translate(treeLoop, vec3(1209.0f * sin(i), -15.0f, 1200.0f * sin(i * 2.5)));
+		treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
+		shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+		treeModel.draw(shader);
+	}
+	for (unsigned int i = 0; i < 30; i++) {
+		mat4 treeLoop = scale(mat4(1.0f), vec3(0.05f, 0.05f, 0.05f));
+		treeLoop = translate(treeLoop, vec3(1509.0f * sin(i), -15.0f, 2000.0f * sin(i * 6)));
+		treeLoop = rotate(treeLoop, radians(20.0f * (i + 1)), vec3(0, 1.0f, 0.0f));
+		shader.setMat4("modelMatrix", 1, GL_FALSE, treeLoop);
+		treeModel.draw(shader);
+	}
+}
+
+void renderCollisionShape(Geometry& collisionShape, Shader& collisionShader, vec3 translation, vec3 scaling, float rotationAngle, vec3 rotationAxis) {
+	glEnable(GL_BLEND);
+	mat4 collisionShapeModel = translate(mat4(1.0f), translation);
+	collisionShapeModel = scale(collisionShapeModel, scaling);
+	collisionShapeModel = rotate(collisionShapeModel, radians(rotationAngle), rotationAxis);
+	collisionShader.use();
+	collisionShader.setMat4("modelMatrix", 1, GL_FALSE, collisionShapeModel);
+	collisionShape.draw();
+}
+
+void renderBrightnessOverlay(Shader& quadShader, VAO& quadVAO) {
+	glEnable(GL_BLEND);
+	//glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFunc(GL_SRC_ALPHA, GL_SRC_COLOR);
+	quadShader.use();
+	quadVAO.bind();
+	quadShader.setFloat("alpha", brightnessOffset);
+	mat4 quadModel = scale(mat4(1.0f), vec3(10.0, 10.0, 10.0));
+	//quadShader.setMat4("modelMatrix", 1, GL_FALSE, quadModel);
+	glDrawArrays(GL_TRIANGLES, 0, 18);
+}
+
+//------------------------Debugging---------------------------
+#pragma region debug
 static void APIENTRY DebugCallbackDefault(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam) {
 	if (id == 131185 || id == 131218) return; // ignore performance warnings from nvidia
 	std::string error = FormatDebugOutput(source, type, id, severity, message);
 	std::cout << error << std::endl;
 }
-
 
 static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char* msg) {
 	std::stringstream stringStream;
@@ -985,22 +917,3 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 }
 #pragma endregion
 
-char* filetobuf(char* file)
-{
-	FILE* fptr;
-	long length;
-	char* buf;
-
-	fptr = fopen(file, "rb"); /* Open file for reading */
-	if (!fptr) /* Return NULL on failure */
-		return NULL;
-	fseek(fptr, 0, SEEK_END); /* Seek to the end of the file */
-	length = ftell(fptr); /* Find out how many bytes into the file we are */
-	buf = (char*)malloc(length + 1); /* Allocate a buffer for the entire length of the file and a null terminator */
-	fseek(fptr, 0, SEEK_SET); /* Go back to the beginning of the file */
-	fread(buf, length, 1, fptr); /* Read the contents of the file in to the buffer */
-	fclose(fptr); /* Close the file */
-	buf[length] = 0; /* Null terminator */
-
-	return buf; /* Return the buffer */
-}

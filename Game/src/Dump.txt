@@ -78,3 +78,31 @@
 			lampShader.use();
 			lampShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
 			lampShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+
+
+
+			
+	//was below procedural wood
+	//HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
+	Texture tex("assets/textures/testTex2.jpg");
+	//use jpg for heightmap
+
+
+
+	was above collisionShapeModel
+	//Procedural Wood
+			//currently cube with wood texture
+			woodVAO.bind();
+			woodShader.use();
+			mat4 woodModel = translate(mat4(1.0f), vec3(1,1,1));
+			woodModel = scale(woodModel, vec3(10.0, 10.0, 10.0));
+			woodShader.setMat4("modelMatrix", 1, GL_FALSE, woodModel);
+			woodShader.setFloat("frequency", 4);
+			woodShader.setFloat("noiseScale", 8);
+			woodShader.setFloat("ringScale", 0.6);
+			woodShader.setFloat("contrast", 4);
+			woodShader.setFloat("time", deltaTime);
+			woodShader.setVec3("color1", 1, vec3(0.1, 0.08, 0.04));
+			woodShader.setVec3("color2", 1, vec3(0.2, 0.1, 0.0));
+		 	glDrawArrays(GL_TRIANGLES, 0, 36);	
+			
