@@ -3,8 +3,8 @@
 
 
 
-const int TERRAIN_DEPTH = 10;
-const int TERRAIN_WIDTH = 10;
+const int TERRAIN_DEPTH = 100;
+const int TERRAIN_WIDTH = 100;
 
 
 //ripple displacement speed
@@ -43,11 +43,10 @@ void Terrain::generateTerrain() {
 	//setup vertices 
 	int count = 0;
 	//fill terrain vertices
-	for (i = 0; i < TERRAIN_DEPTH; i++) {
-		for (j = 0; j < TERRAIN_WIDTH; j++) {
-			vertices[count] = glm::vec3((float(j) / (TERRAIN_WIDTH - 1)), 0, (float(i) / (TERRAIN_DEPTH - 1)));
-			texCoords[count] = glm::vec2((float)i / TERRAIN_DEPTH, (float)j / TERRAIN_WIDTH);
-
+	for (j = 0; j < TERRAIN_DEPTH; j++) {
+		for (i = 0; i < TERRAIN_WIDTH; i++) {
+			vertices[count] = glm::vec3((float(i) / (TERRAIN_WIDTH - 1)), 0, (float(j) / (TERRAIN_DEPTH - 1)));
+			texCoords[count] = glm::vec2((float)j / TERRAIN_DEPTH, (float)i / TERRAIN_WIDTH);
 			count++;
 		}
 	}
@@ -64,40 +63,31 @@ void Terrain::generateTerrain() {
 			*id++ = i1;
 			*id++ = i2;
 			*id++ = i3;
-			std::cout << i0 << std::endl;
-			std::cout << i1 << std::endl;
-			std::cout << i2 << std::endl;
-			std::cout << i3 << std::endl;
 		}
 	}
 
-	
+	glGenVertexArrays(1, &vaoID);
+	glGenBuffers(1, &vboVerticesID);
+	glGenBuffers(1, &vboIndicesID);
+	glGenBuffers(1, &vboUVID);
 
-	
+	glBindVertexArray(vaoID);
 
+	//Vertices
+	glBindBuffer(GL_ARRAY_BUFFER, vboVerticesID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
 
-glGenVertexArrays(1, &vaoID);
-glGenBuffers(1, &vboVerticesID);
-glGenBuffers(1, &vboIndicesID);
-glGenBuffers(1, &vboUVID);
+	//Indices
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndicesID);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
 
-glBindVertexArray(vaoID);
-
-//Vertices
-glBindBuffer(GL_ARRAY_BUFFER, vboVerticesID);
-glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
-glEnableVertexAttribArray(0);
-
-//Indices
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndicesID);
-glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
-
-//UV
-glBindBuffer(GL_ARRAY_BUFFER, vboUVID);
-glBufferData(GL_ARRAY_BUFFER, TEX_COORDS * sizeof(glm::vec2), &texCoords[0], GL_STATIC_DRAW);
-glEnableVertexAttribArray(1);
-glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	//UV
+	glBindBuffer(GL_ARRAY_BUFFER, vboUVID);
+	glBufferData(GL_ARRAY_BUFFER, TEX_COORDS * sizeof(glm::vec2), &texCoords[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
 

@@ -3,8 +3,9 @@
 * Institute of Computer Graphics and Algorithms.
 * This file is part of the ECG Lab Framework and must not be redistributed.
 */
-#pragma once
+#define _CRT_NO_VA_START_VALIDATION
 
+#pragma once
 #include <sstream>
 #include <string>
 #include <iostream>
@@ -59,6 +60,9 @@ void renderCollisionShape(Geometry& collisionShape, Shader& collisionShader, vec
 void renderSuns(Shader& shader, vec3 sunPos[], Texture& redSunTex, Texture& blueSunTex, Model& redSunModel, Model& blueSunModel);
 void renderTrees(Shader& shader, Model& treeModel);
 void renderBrightnessOverlay(Shader& quadShader, VAO& quadVAO);
+float uniformRandomInRange(float min, float max);
+std::string format(const std::string& fmt, ...);
+
 
 
 /* --------------------------------------------- */
@@ -143,6 +147,8 @@ int main(int argc, char** argv)
 	//heightmap height scale and half scale values
 	float heightMapScale = 150;
 	float heightMapHalfScale = heightMapScale / 2.0f;
+
+
 
 	/* --------------------------------------------- */
 	// Create context
@@ -268,15 +274,6 @@ int main(int argc, char** argv)
 		glm::vec3(-4.0f, -1.1f, -3.3f)
 	};
 
-	float groundVertices[] = {
-		-500, -0.5, 1000,
-		500, -0.5, 1000,
-		500, -0.5, -1000,
-
-		500, -0.5, -1000,
-		-500, -0.5, -1000,
-		-500, -0.5, 1000,
-	};
 
 	float quadVertices[] = {
 		-1.0, -1.0, 0.5,
@@ -299,6 +296,7 @@ int main(int argc, char** argv)
 	};
 
 
+	HeightMap heightmap("assets/textures/terrain/heightMap4.jpg");
 
 
 	//------------ lighting -------------------
@@ -327,8 +325,7 @@ int main(int argc, char** argv)
 
 	Texture redSunTex("assets/models/sunRed/sun.jpg");
 	Texture blueSunTex("assets/models/sunBlue/sun.jpg");
-	//Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
-	//Texture terrainTex("assets/textures/terrain/grass.jpg", "assets/textures/terrain/test_color.jpg");
+	Texture terrainTex("assets/textures/terrain/mountain.jpg", "assets/textures/terrain/grass3.jpg");
 
 
 	//Load and initialize shaders
@@ -338,9 +335,16 @@ int main(int argc, char** argv)
 	//shader.setInt("material.specular", 1);
 
 	Shader lampShader("assets/shader/lampVertex.vert", "assets/shader/lampFragment.frag");
-	Shader terrainShader("assets/shader/terrainVertex.vert", "assets/shader/terrainFragment.frag");
+	Shader terrainShader("assets/shader/testWater.vert", "assets/shader/testWater.frag");
+
+
+	Terrain terrain;
+	terrain.generateTerrain();
+
 	Shader woodShader("assets/shader/woodVertex.vert", "assets/shader/woodFragment.frag");
 	Shader quadShader("assets/shader/quadVertex.vert", "assets/shader/quadFragment.frag");
+
+
 
 
 
@@ -441,7 +445,6 @@ int main(int argc, char** argv)
 	textVAO.unbind();
 
 
-
 #pragma endregion
 	/* --------------------------------------------- */
 	// Initialize scene and render loop
@@ -453,11 +456,46 @@ int main(int argc, char** argv)
 			glfwPollEvents();
 			glDisable(GL_BLEND);
 
+			float time = (float)glfwGetTime();
+
 			// Camera & Lighting
 			processInput(window);
 			updateFrameTime();
 			updateShaderMatrices(shader, collisionShader);
 			setGeneralLight(shader);
+
+			mat4 viewMatrix = cam.getViewMatrix();
+			mat4 projectionMatrix = perspective(radians(cam.camFOV), aspectRatio, zNear, zFar);
+			heightmap.bind();
+			terrainShader.use();
+			terrainShader.setFloat("waterHeight", 20);
+			terrainShader.setInt("numWaves", 4);
+			for (int i = 0; i < 4; ++i) {
+				float amplitude = 0.5f / (i + 1);
+				terrainShader.setFloat(format("amplitude[%d]", i), amplitude);
+
+				float wavelength = 8 * 3.14159265358979323846 / (i + 1);
+				terrainShader.setFloat(format("wavelength[%d]", i), wavelength);
+
+				float speed = 1.0f + 2 * i;
+				terrainShader.setFloat(format("speed[%d]", i), speed);
+
+				float angle = uniformRandomInRange(-3.14159265358979323846 / 3, 3.14159265358979323846 / 3);
+				terrainShader.setVec2(format("direction[%d]", i), 1, glm::vec2(cos(angle), sin(angle)) );
+			}
+			mat4 terrainModel = mat4(1.0f);
+			terrainModel = translate(terrainModel, glm::vec3(0, 50.0f, 0));
+			terrainShader.setMat4("modelMatrix", 1, GL_FALSE, terrainModel);
+			terrainShader.setMat4("projectionMatrix", 1, GL_FALSE, projectionMatrix);
+			terrainShader.setMat4("viewMatrix", 1, GL_FALSE, viewMatrix);
+			terrainShader.setInt("heightMapTexture", 0);
+			terrainShader.setInt2("HALF_TERRAIN_SIZE", TERRAIN_WIDTH >> 1, TERRAIN_DEPTH >> 1);
+			terrainShader.setFloat("scale", heightMapScale);
+			terrainShader.setFloat("half_scale", heightMapHalfScale);
+			terrainShader.setFloat("time", time);
+			terrainTex.doubleBind();
+
+			//terrain.drawTerrain();
 			
 			//Render Objects
 			renderTerrain(shader, terrainModelC);
@@ -466,11 +504,13 @@ int main(int argc, char** argv)
 			renderModel(houseModel, shader, vec3(-5.0f, -0.75f, -5.0f), vec3(0.2f, 0.22, 0.2f), 0.0f, vec3(1.0f));
 			renderTrees(shader, treeModel);			
 			renderCollisionShape(testCollisionShape, collisionShader, vec3(0.0f, 100.0f, 20.0f), vec3(1.0f), 0.0f, vec3(1.0f));
-
 			renderBrightnessOverlay(quadShader, quadVAO);
 			renderText(fpsString, textShader, textVAO, textVBO, 25.0f, 25.0f, 1.0f, vec3(0.05f, 0.05f, 0.05f));
 			//Physics
 			world->stepSimulation(deltaTime);
+
+
+	
 
 			// Swap buffers
 			glfwSwapBuffers(window);
@@ -908,3 +948,28 @@ static std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLen
 }
 #pragma endregion
 
+string format(const string& fmt, ...) {
+	va_list args;
+
+	va_start(args, fmt);
+	char* buffer = NULL;
+	int size = vsnprintf(buffer, 0, fmt.c_str(), args);
+	va_end(args);
+	buffer = new char[size + 1];
+
+	va_start(args, fmt);
+	vsnprintf(buffer, size + 1, fmt.c_str(), args);
+	va_end(args);
+	string str(buffer);
+	delete[] buffer;
+
+	va_end(args);
+	return str;
+}
+
+float uniformRandomInRange(float min, float max) {
+	assert(min < max);
+	double n = (double)rand() / (double)RAND_MAX;
+	double v = min + n * (max - min);
+	return v;
+}

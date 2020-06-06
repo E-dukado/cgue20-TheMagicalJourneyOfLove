@@ -13,6 +13,7 @@
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\VAO.cpp" />
     <ClCompile Include="src\VBO.cpp" />
+    <ClCompile Include="src\Water.cpp" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\EBO.h" />
     <ClInclude Include="src\Geometry.h" />
@@ -31,6 +32,7 @@
     <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\VAO.h" />
     <ClInclude Include="src\VBO.h" />
+    <ClInclude Include="src\Water.h" />
   </ItemGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
